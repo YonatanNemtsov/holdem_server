@@ -7,21 +7,37 @@ from asgiref.sync import async_to_sync
 
 class WSConsumer(WebsocketConsumer):
     def connect(self):
+        self.group_name = 'a'
         async_to_sync(self.channel_layer.group_add)(
-            self.room_group_name, self.channel_name
+            self.group_name, self.channel_name
         )
 
+        self.accept()
+
     def receive(self,text_data=None):
+
         print(text_data)
         i = randint(0,3)
         guess = json.loads(text_data)['message']
-        if guess == str(i):
-            self.send(json.dumps({'message':'you won!'}))
-        else:
-            self.send(json.dumps({'message':'you lose!'}))
 
-    
+        if guess == str(i):
+            message = 'you won!'
+        else:
+            message = 'you lose!'
+        
+        json_message = {"type": "game_message",'message':message}
+
+        async_to_sync(self.channel_layer.group_send)(
+            self.group_name, json_message
+        )
+
+
     def disconnect(self, code):
         async_to_sync(self.channel_layer.group_discard)(
-            self.room_group_name, self.channel_name
+            self.group_name, self.channel_name
         )
+
+    def game_message(self, event):
+        message = event["message"]
+        # Send message to WebSocket
+        self.send(text_data=json.dumps({"message": message}))
