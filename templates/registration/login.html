@@ -7,7 +7,13 @@
     <title> Login Page </title>
 </head>
 <body>
-    <input type="text" class="login-input"><br>
-    <button> Login </button>
+    <h1>Hi! Please log in</h1>
+    <h2>Log In</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Log In</button>
+</form>
+
 </body>
 </html>
