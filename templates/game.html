@@ -6,26 +6,49 @@
     <title> Guessing Game </title>
 </head>
 <body>
+
+    <ul id="players"><li>Players:</li></ul>
+
     <h1 id="log"></h1><br>
     <input id="chat-message-input" type="text" size="100"><br>
     <input id="chat-message-submit" type="button" value="Send">
     
-
+    
+    {{ table_name|json_script:"table-name" }}
     <script>
-
+        const tableName = JSON.parse(document.getElementById('table-name').textContent);
         const gameSocket = new WebSocket(
             'ws://'
             + window.location.host
-            + '/ws/some_url/'
+            + '/ws/game/'
+            + tableName
+            +'/'
         );
 
         gameSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            document.querySelector('#log').innerText = (data.message);
+            let players_list = document.querySelector('#players');
+            const players = [];
+            switch (data.type){
+
+                case 'game_message':
+                    document.querySelector('#log').innerText = (data.message);
+                case 'login_message':
+                    players.push(data.player);
+                /*case 'disconnect_message':
+                    document.querySelector('#'+data.user).innerText = 'disconnected';
+            }*/
+
+            players.forEach((item)=>{
+                   let li = document.createElement("li");
+                   li.innerText = item;
+                   players_list.appendChild(li);
+            })
+            }
         };
 
         gameSocket.onclose = function(e) {
-            console.error('Chat socket closed unexpectedly');
+            /*console.error('Chat socket closed unexpectedly');*/
         };
 
         document.querySelector('#chat-message-input').focus();

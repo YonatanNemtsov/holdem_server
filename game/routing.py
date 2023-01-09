@@ -1,6 +1,7 @@
-from django.urls import path
+from django.urls import path,re_path
 
 from . import consumers
 ws_urlpatterns = [
-    path('ws/some_url/', consumers.WSConsumer.as_asgi())
+    #path('ws/some_url/', consumers.WSConsumer.as_asgi())
+    re_path(r"ws/game/(?P<table_name>\w+)/$", consumers.WSConsumer.as_asgi()),
 ]
