@@ -1,4 +1,4 @@
-<!-- chat/templates/chat/room.html -->
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -6,17 +6,63 @@
     <title> Guessing Game </title>
 </head>
 <body>
+    <div id="player1">
+        <a href="/game/table/">Sit 1</a>
+        <div>player: {{ p1 }} card: <p id="player1-card"></p><div>
+    </div>
+    <br>
+    <br>
+    <br>
+    <h2 id="log"> Game beggins </h2>
+    <br>
+    <br>
+    <br>
 
-    <ul id="players"><li>Players:</li></ul>
+    <div id="player2">
+        <a href="/game/table/">Sit 2</a>
+        <div>player: {{ p2 }} card: <p id="player2-card"></p></div>
+    </div>
+    <br>
+    <h2> you:  {{ player }} </h2>
 
-    <h1 id="log"></h1><br>
-    <input id="chat-message-input" type="text" size="100"><br>
-    <input id="chat-message-submit" type="button" value="Send">
-    
-    
+    <form id="select-card" action="">
+        <fieldset>
+            <legend>Select a card or resign:</legend>
+            
+            <div>
+                <input type="radio" id="1" name="choice" value="1"
+                checked>
+                <label for="1">1</label>
+            </div>
+            
+            <div>
+                <input type="radio" id="2" name="choice" value="2">
+                <label for="2">2</label>
+            </div>
+
+            <div>
+                <button type="submit"> Submit </button>
+            </div>
+        </fieldset>
+    </form>
+
+    <button type="button" value="resign" id="resign"> Resign </button>
+
+
     {{ table_name|json_script:"table-name" }}
+    {{ player.username|json_script:"player-name"}}
+    {% if player == p1 %}
+    {{ 1|json_script:"sit-number" }}
+    {% endif %}
+    {% if player == p2 %}
+    {{ 2|json_script:"sit-number" }}
+    {% endif %}
+
     <script>
         const tableName = JSON.parse(document.getElementById('table-name').textContent);
+        const sitNumber = JSON.parse(document.getElementById('sit-number').textContent);
+        const playerName = JSON.parse(document.getElementById('player-name').textContent);
+
         const gameSocket = new WebSocket(
             'ws://'
             + window.location.host
@@ -24,48 +70,58 @@
             + tableName
             +'/'
         );
+        
 
         gameSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            let players_list = document.querySelector('#players');
-            const players = [];
+            console.log(data);
             switch (data.type){
-
-                case 'game_message':
+                case 'new_move':
                     document.querySelector('#log').innerText = (data.message);
-                case 'login_message':
-                    players.push(data.player);
-                /*case 'disconnect_message':
-                    document.querySelector('#'+data.user).innerText = 'disconnected';
-            }*/
-
-            players.forEach((item)=>{
-                   let li = document.createElement("li");
-                   li.innerText = item;
-                   players_list.appendChild(li);
-            })
+                    break;
+                case 'resign':
+                    document.querySelector('#log').innerText = (data.message);
+                    break;
+                
             }
-        };
 
+        };
         gameSocket.onclose = function(e) {
-            /*console.error('Chat socket closed unexpectedly');*/
+            const data = JSON.parse(e.data);
+            document.querySelector('#'+data.user).innerText = 'disconnected';
+            console.error('Chat socket closed unexpectedly');
         };
 
-        document.querySelector('#chat-message-input').focus();
-        document.querySelector('#chat-message-input').onkeyup = function(e) {
-            if (e.keyCode === 13) {  // enter, return
-                document.querySelector('#chat-message-submit').click();
-            }
-        };
+        var moveChoicesDom = document.querySelector('#select-card');
+        moveChoicesDom.onsubmit = function(e) {
+            
+            
+            const formData = new FormData(moveChoicesDom);
+            console.log(formData);
+            
+            const data = JSON.stringify(Object.fromEntries(formData));
+            const message = JSON.parse(data).choice;
 
-        document.querySelector('#chat-message-submit').onclick = function(e) {
-            const messageInputDom = document.querySelector('#chat-message-input');
-            const message = messageInputDom.value;
             gameSocket.send(JSON.stringify({
-                'message': message
+                'type':'new_move',
+                'message': message,
+                'player': playerName,
             }));
-            messageInputDom.value = '';
+            e.preventDefault();
         };
+
+        const resignDom = document.querySelector('#resign');
+        resignDom.onclick = function() {
+            const message = 'resign';
+            gameSocket.send(JSON.stringify({
+                'type':'resign',
+                'message': message,
+                'player': playerName,
+            }));
+        };
+        
+    
     </script>
+    
 </body>
 </html>

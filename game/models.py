@@ -11,30 +11,29 @@ class GameTable(models.Model):
         User,
         related_name='p1',
         on_delete=models.CASCADE,
+        null=True
     )
 
     player2 = models.ForeignKey(
         User,
         related_name='p2',
         on_delete=models.CASCADE,
+        null=True
     )
 
-    moves_log = models.JSONField(default=dict)
-
-    player1_cards = models.IntegerField()
-    player2_cards = models.IntegerField()
-
+    p1_status = models.BooleanField(default=0)
+    p2_status = models.BooleanField(default=0)
+    
+    to_move = models.CharField(default='p1',max_length=100)
+    log = models.JSONField(default=list)
+    
     def __str__(self):
         return self.table_name
 
-
-class JsonTest(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    data = models.JSONField(default=dict)
-    def __str__(self) -> str:
-        return self.name
-
 class GameLog(models.Model):
+    table = models.CharField(default='1', max_length=100)
     p1_name = models.CharField(default='p1', max_length=100)
     p2_name = models.CharField(default='p2', max_length=100)
     log = models.JSONField(default=list)
+    def __str__(self) -> str:
+        return self.table
