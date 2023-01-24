@@ -5,8 +5,9 @@ from django.contrib.auth.models import User
 
 
 class GameTable(models.Model):
+    # need to rewrite more elegantly.
     table_name = models.CharField(max_length=100,default='table',unique=True)
-
+    
     player1 = models.ForeignKey(
         User,
         related_name='p1',
@@ -20,13 +21,14 @@ class GameTable(models.Model):
         on_delete=models.CASCADE,
         null=True
     )
-
-    p1_status = models.BooleanField(default=0)
-    p2_status = models.BooleanField(default=0)
     
     to_move = models.CharField(default='p1',max_length=100)
+    moves_made = models.IntegerField(default=0)
     log = models.JSONField(default=list)
+    winner = models.CharField(default='',max_length=100)
     
+    card1 = models.IntegerField(default=0)
+    card2 = models.IntegerField(default=0)
     def __str__(self):
         return self.table_name
 

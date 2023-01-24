@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'daphne',
     'game',
     'django_extensions',
+    'channels',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -139,7 +140,7 @@ CHANNEL_LAYERS = {
 
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = '/'
-
+"""
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -149,3 +150,4 @@ CACHES = {
         }
     }
 }
+"""

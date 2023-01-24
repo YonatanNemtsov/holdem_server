@@ -82,13 +82,18 @@
                 case 'resign':
                     document.querySelector('#log').innerText = (data.message);
                     break;
-                
+                case 'message':
+                    document.querySelector('#log').innerText = 'winner:' + (data.message);
+                    break;
+                    /* Recreate table */
+                default:
+                    break;
             }
 
         };
         gameSocket.onclose = function(e) {
             const data = JSON.parse(e.data);
-            document.querySelector('#'+data.user).innerText = 'disconnected';
+            document.querySelector('#player'+sitNumber).innerText = 'disconnected';
             console.error('Chat socket closed unexpectedly');
         };
 
@@ -100,11 +105,11 @@
             console.log(formData);
             
             const data = JSON.stringify(Object.fromEntries(formData));
-            const message = JSON.parse(data).choice;
+            const cardChoice = JSON.parse(data).choice;
 
             gameSocket.send(JSON.stringify({
-                'type':'new_move',
-                'message': message,
+                'type':'card_choice',
+                'choice': cardChoice,
                 'player': playerName,
             }));
             e.preventDefault();
