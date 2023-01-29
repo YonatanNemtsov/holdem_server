@@ -12,14 +12,18 @@ class GameTable(models.Model):
         User,
         related_name='p1',
         on_delete=models.CASCADE,
-        null=True
+        blank = True,
+        null = True,
+        default = None
     )
 
     player2 = models.ForeignKey(
         User,
         related_name='p2',
         on_delete=models.CASCADE,
-        null=True
+        blank = True,
+        null = True,
+        default = None
     )
     
     to_move = models.CharField(default='p1',max_length=100)

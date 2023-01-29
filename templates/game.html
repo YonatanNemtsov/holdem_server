@@ -7,7 +7,7 @@
 </head>
 <body>
     <div id="player1">
-        <a href="/game/table/">Sit 1</a>
+        <button id="sit1"> sit 1</button>
         <div>player: {{ p1 }} card: <p id="player1-card"></p><div>
     </div>
     <br>
@@ -19,7 +19,7 @@
     <br>
 
     <div id="player2">
-        <a href="/game/table/">Sit 2</a>
+        <button id="sit2"> sit 2</button>
         <div>player: {{ p2 }} card: <p id="player2-card"></p></div>
     </div>
     <br>
@@ -50,7 +50,7 @@
 
 
     {{ table_name|json_script:"table-name" }}
-    {{ player.username|json_script:"player-name"}}
+    {{ player.username|json_script:"player-name" }}
     {% if player == p1 %}
     {{ 1|json_script:"sit-number" }}
     {% endif %}
@@ -60,9 +60,8 @@
 
     <script>
         const tableName = JSON.parse(document.getElementById('table-name').textContent);
-        const sitNumber = JSON.parse(document.getElementById('sit-number').textContent);
+        /*const sitNumber = JSON.parse(document.getElementById('sit-number').textContent);*/
         const playerName = JSON.parse(document.getElementById('player-name').textContent);
-
         const gameSocket = new WebSocket(
             'ws://'
             + window.location.host
@@ -71,25 +70,31 @@
             +'/'
         );
         
-
+        // recieving messages over websocket
         gameSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
             console.log(data);
             switch (data.type){
+                // might be a good idea to put different cases in seperate functions and call them.
                 case 'new_move':
                     document.querySelector('#log').innerText = (data.message);
                     break;
                 case 'resign':
                     document.querySelector('#log').innerText = (data.message);
                     break;
-                case 'message':
+                case 'update_table':
                     document.querySelector('#log').innerText = 'winner:' + (data.message);
                     break;
-                    /* Recreate table */
+                    // Recreate table
+
                 default:
                     break;
             }
 
+
+
+        
+        
         };
         gameSocket.onclose = function(e) {
             const data = JSON.parse(e.data);
@@ -97,6 +102,7 @@
             console.error('Chat socket closed unexpectedly');
         };
 
+        // Sending messages over websocket
         var moveChoicesDom = document.querySelector('#select-card');
         moveChoicesDom.onsubmit = function(e) {
             
@@ -115,17 +121,26 @@
             e.preventDefault();
         };
 
-        const resignDom = document.querySelector('#resign');
-        resignDom.onclick = function() {
-            const message = 'resign';
+        var sitButton1 = document.querySelector('#sit1');
+        sitButton1.onclick = function() {
             gameSocket.send(JSON.stringify({
-                'type':'resign',
-                'message': message,
-                'player': playerName,
+                'type':'sit_request',
+                'player':playerName,
+                'sit':1
             }));
+
         };
-        
-    
+
+        var sitButton2 = document.querySelector('#sit2');
+        sitButton2.onclick = function() {
+            gameSocket.send(JSON.stringify({
+                'type':'sit_request',
+                'player':playerName,
+                'sit':2
+            }));
+
+        };
+
     </script>
     
 </body>
