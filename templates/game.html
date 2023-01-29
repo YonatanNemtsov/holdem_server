@@ -8,7 +8,7 @@
 <body>
     <div id="player1">
         <button id="sit1"> sit 1</button>
-        <div>player: {{ p1 }} card: <p id="player1-card"></p><div>
+        <div> player:<p id="p1"> </p>   card: <p id="player1-card"></p><div>
     </div>
     <br>
     <br>
@@ -20,7 +20,7 @@
 
     <div id="player2">
         <button id="sit2"> sit 2</button>
-        <div>player: {{ p2 }} card: <p id="player2-card"></p></div>
+        <div>player: <p id="p2"></p>  card: <p id="player2-card"></p></div>
     </div>
     <br>
     <h2> you:  {{ player }} </h2>
@@ -76,26 +76,31 @@
             console.log(data);
             switch (data.type){
                 // might be a good idea to put different cases in seperate functions and call them.
+                /*
                 case 'new_move':
                     document.querySelector('#log').innerText = (data.message);
                     break;
                 case 'resign':
                     document.querySelector('#log').innerText = (data.message);
                     break;
-                case 'update_table':
-                    document.querySelector('#log').innerText = 'winner:' + (data.message);
-                    break;
+                */
+
+                case 'table_state':
+                    update_table(data);
                     // Recreate table
+                    break;
 
                 default:
                     break;
             }
-
-
-
-        
-        
         };
+
+        function update_table(data){
+            document.querySelector('#log').innerText = 'winner:' + (data.message.winner);
+            document.querySelector('#p1').innerText = (data.message.players['1']);
+            document.querySelector('#p2').innerText = (data.message.players['2']);
+        }
+
         gameSocket.onclose = function(e) {
             const data = JSON.parse(e.data);
             document.querySelector('#player'+sitNumber).innerText = 'disconnected';
@@ -138,6 +143,10 @@
                 'player':playerName,
                 'sit':2
             }));
+
+        };
+
+        function render_table_state(table_state) {
 
         };
 

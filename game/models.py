@@ -3,6 +3,11 @@ from django.contrib.auth.models import User
 # Create your models here.
 
 
+class Player (models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    sit = models.IntegerField()
+    def __str__(self):
+        return f'{self.sit} {self.user.username}'
 
 class GameTable(models.Model):
     # need to rewrite more elegantly.
@@ -25,6 +30,10 @@ class GameTable(models.Model):
         null = True,
         default = None
     )
+
+    players = models.ManyToManyField(
+        Player,
+    )
     
     to_move = models.CharField(default='p1',max_length=100)
     moves_made = models.IntegerField(default=0)
@@ -36,10 +45,21 @@ class GameTable(models.Model):
     def __str__(self):
         return self.table_name
 
-class GameLog(models.Model):
-    table = models.CharField(default='1', max_length=100)
-    p1_name = models.CharField(default='p1', max_length=100)
-    p2_name = models.CharField(default='p2', max_length=100)
-    log = models.JSONField(default=list)
+# Many to many example 
+class Member(models.Model):
+    name = models.CharField(max_length=100)
+    sit = models.IntegerField()
     def __str__(self) -> str:
-        return self.table
+        return f'{self.name} sit: {self.sit}'
+
+class Group(models.Model):
+    name = models.CharField(default='group',max_length=100)
+    members = models.ManyToManyField(
+        Member,
+        through='Membership',
+        through_fields=('group', 'member'),
+    )
+
+class Membership(models.Model):
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
