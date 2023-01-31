@@ -6,51 +6,60 @@
     <title> Guessing Game </title>
 </head>
 <body>
-    <div id="player1">
-        <button id="sit1"> sit 1</button>
-        <div> player:<p id="p1"> </p>   card: <p id="player1-card"></p><div>
+
+
+    <div id="player-1">
+        <button class="sit"> sit 1</button>
+        <div> player:
+            <p class="player-name"> </p>   
+            card: 
+            <p class="card"></p>
+            chips:
+            <p class="chips"></p>
+        </div>
     </div>
     <br>
     <br>
     <br>
-    <h2 id="log"> Game beggins </h2>
+    <h2 id="log"> Loading Game... </h2>
     <br>
     <br>
     <br>
 
-    <div id="player2">
-        <button id="sit2"> sit 2</button>
-        <div>player: <p id="p2"></p>  card: <p id="player2-card"></p></div>
+    <div id="player-2">
+        <button class="sit"> sit 2</button>
+        <div>player: 
+            <p class="player-name"></p>  
+            card: 
+            <p class="card"></p>
+            chips:
+            <p class="chips"></p>
+        </div>
     </div>
     <br>
     <h2> you:  {{ player }} </h2>
 
-    <form id="select-card" action="">
-        <fieldset>
-            <legend>Select a card or resign:</legend>
-            
-            <div>
-                <input type="radio" id="1" name="choice" value="1"
-                checked>
-                <label for="1">1</label>
-            </div>
-            
-            <div>
-                <input type="radio" id="2" name="choice" value="2">
-                <label for="2">2</label>
-            </div>
+    <button type="button" value="fold" id="fold"> Fold </button>
 
-            <div>
-                <button type="submit"> Submit </button>
-            </div>
-        </fieldset>
-    </form>
-
-    <button type="button" value="resign" id="resign"> Resign </button>
-
+    <button type="button" value="call" id="call"> Call </button>
+    
+    <button type="button" value="check" id="check"> Check </button>
+    
+    <button type="button" value="start_round" id="start_round"> Start Round</button>
+    
+    
+    <div id="bet">
+        <input type="number">
+        <button type="submit"> bet </button>
+    </div>
+    
+    <div id="raise">
+        <input type="number">
+        <button type="submit"> raise</button>
+    </div>
 
     {{ table_name|json_script:"table-name" }}
-    {{ player.username|json_script:"player-name" }}
+    {{ player.username|json_script:"user" }}
     {% if player == p1 %}
     {{ 1|json_script:"sit-number" }}
     {% endif %}
@@ -61,7 +70,7 @@
     <script>
         const tableName = JSON.parse(document.getElementById('table-name').textContent);
         /*const sitNumber = JSON.parse(document.getElementById('sit-number').textContent);*/
-        const playerName = JSON.parse(document.getElementById('player-name').textContent);
+        const playerName = JSON.parse(document.getElementById('user').textContent);
         const gameSocket = new WebSocket(
             'ws://'
             + window.location.host
@@ -97,36 +106,88 @@
 
         function update_table(data){
             document.querySelector('#log').innerText = 'winner:' + (data.message.winner);
-            document.querySelector('#p1').innerText = (data.message.players['1']);
-            document.querySelector('#p2').innerText = (data.message.players['2']);
-        }
+            document.querySelector('#player-1 .player-name').innerText = (data.message.players['1']['username']);
+            document.querySelector('#player-2 .player-name').innerText = (data.message.players['2']['username']);
+            document.querySelector(('#player-'+data.message.sit+' .card')).innerText = (data.message.card);
+            document.querySelector('#player-1 .chips').innerText = (data.message.players['1']['chips']);
+            document.querySelector('#player-2 .chips').innerText = (data.message.players['2']['chips']);
+        };
 
         gameSocket.onclose = function(e) {
-            const data = JSON.parse(e.data);
-            document.querySelector('#player'+sitNumber).innerText = 'disconnected';
+            // const data = JSON.parse(e.data);
             console.error('Chat socket closed unexpectedly');
         };
 
-        // Sending messages over websocket
-        var moveChoicesDom = document.querySelector('#select-card');
-        moveChoicesDom.onsubmit = function(e) {
-            
-            
-            const formData = new FormData(moveChoicesDom);
-            console.log(formData);
-            
-            const data = JSON.stringify(Object.fromEntries(formData));
-            const cardChoice = JSON.parse(data).choice;
+        // Sending requests over websocket
 
+        const betRequestDom = document.querySelector('#bet button');
+        betRequestDom.onclick = function() {
+            const amount = document.querySelector('#bet input').value;
+            console.log(amount);
             gameSocket.send(JSON.stringify({
-                'type':'card_choice',
-                'choice': cardChoice,
-                'player': playerName,
+                'type':'game_request',
+                'message':{
+                    'action':'bet',
+                    'amount':amount,
+                }
             }));
-            e.preventDefault();
-        };
+        }
 
-        var sitButton1 = document.querySelector('#sit1');
+        const raiseRequestDom = document.querySelector('#raise button');
+        raiseRequestDom.onclick = function() {
+            const amount = document.querySelector('#raise input').value;
+            console.log(amount);
+            gameSocket.send(JSON.stringify({
+                'type':'game_request',
+                'message':{
+                    'action':'raise',
+                    'amount':amount,
+                }
+            }));
+        }
+
+        const foldRequestDom = document.querySelector('#fold');
+        foldRequestDom.onclick = function() {
+            gameSocket.send(JSON.stringify({
+                'type':'game_request',
+                'message':{
+                    'action':'fold'
+                }
+            }));
+        }
+
+        const callRequestDom = document.querySelector('#call');
+        callRequestDom.onclick = function() {
+            gameSocket.send(JSON.stringify({
+                'type':'game_request',
+                'message':{
+                    'action':'call'
+                }
+            }));
+        }
+
+        const startRoundRequestDom = document.querySelector('#start_round');
+        startRoundRequestDom.onclick = function() {
+            gameSocket.send(JSON.stringify({
+                'type':'game_request',
+                'message':{
+                    'action':'start_round'
+                }
+            }));
+        }
+        
+        const checkRequestDom = document.querySelector('#check');
+        checkRequestDom.onclick = function() {
+            gameSocket.send(JSON.stringify({
+                'type':'game_request',
+                'message':{
+                    'action':'check'
+                }
+            }));
+        }
+
+        // requests to sit at table or leave table
+        var sitButton1 = document.querySelector('#player-1 .sit');
         sitButton1.onclick = function() {
             gameSocket.send(JSON.stringify({
                 'type':'sit_request',
@@ -136,7 +197,7 @@
 
         };
 
-        var sitButton2 = document.querySelector('#sit2');
+        var sitButton2 = document.querySelector('#player-2 .sit');
         sitButton2.onclick = function() {
             gameSocket.send(JSON.stringify({
                 'type':'sit_request',

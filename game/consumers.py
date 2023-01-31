@@ -5,35 +5,34 @@ from channels.db import database_sync_to_async
 from .models import GameTable, Player
 from asgiref.sync import async_to_sync
 from django.contrib.auth.models import User, AnonymousUser
-
+from time import sleep
 
 class GameConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self.table_name = self.scope['url_route']['kwargs']['table_name'] 
         
-        #if self.scope['user'].username in await self.get_players(self.table_name):
         await self.accept()
+        #sleep(0.4)
         await self.channel_layer.group_add('table', self.channel_name)
         return await self.channel_layer.send(
             self.channel_name,
             {'type':'send_table_state'}
         )
         
-        
-        #await self.accept()
     
     async def receive_json(self, content, **kwargs):
         print(content)
         type = content.get("type",None)
 
-        if type == 'card_choice':
+        if type == 'game_request':
+            print('game_request')
+
+            # todo: add assertions to verify message.
             return await self.channel_layer.send(
                 'test',
                 {
-                    'type':'card.choice',
-                    'message':content.get('choice',None),
-                    'player':content.get('player',None),
-                    'channel':self.channel_name,
+                    'type':'game_update',
+                    'message':content.get('message',None),
                 }
             )
         
@@ -50,30 +49,20 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 }
             )
         
+    async def disconnect(self, code):
+        await self.channel_layer.group_discard('table',self.channel_name)
+        return await self.close()
 
     @database_sync_to_async
     def sit_request(self,event):
         print(3)
         table = GameTable.objects.get(table_name=event['table'])
         sit = event['sit']
-        if sit==1:
-            if table.player1 == None:
-                table.player1 = self.scope['user']
 
-            elif table.player1==self.scope['user']:
-                table.player1 = None
-            table.save()
-        if sit==2:
-            if table.player2 == None:
-                table.player2 = self.scope['user']
-
-            elif table.player2==self.scope['user']:
-                table.player2 = None
-            table.save()
+        assert type(sit)==int
+        assert 0 < sit < 10
         
-        #print(type(table.players.filter(sit=sit)))
         sit_occupation = table.players.filter(sit=sit)
-        #print(sit_occupation[0].user)
         print(table.players)
         print(Player.objects.all())
         if not sit_occupation:
@@ -89,18 +78,34 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         )
         print(11)
 
-        
     @database_sync_to_async
     def send_table_state(self,event):
+        print('sending table state')
         table = GameTable.objects.get(table_name=self.table_name)
-        print(100)
-
-        players = {p.sit:p.user.username for p in table.players.all()}
+        players = {
+            p.sit:{
+                'username':p.user.username,
+                'chips':p.chips,
+            } 
+            for p in table.players.all()
+        }
         print(players)
+        
+        try:
+            sit = str(list({i for i in players if players[i]['username']==self.scope['user'].username})[0])
+            card = table.cards[sit]
+        except:
+            sit =None
+            card =None
+
+        print(sit,card)
         message = {
             'players':players,
             'to_move':table.to_move,
             'winner':table.winner,
+            'card':card,
+            'sit':sit,
+            
         }
 
         async_to_sync(self.send_json)(
@@ -109,71 +114,41 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 'message': message
             }
         )
-        
+    
     @database_sync_to_async
     def get_players(self,table_name):
         table =  GameTable.objects.get(table_name)
         players = [player.user.username for player in table.players.all()]
         return players
 
-    async def disconnect(self, code):
-        await self.channel_layer.group_discard('table',self.channel_name)
-        return await self.close()
-
-
 class Test(AsyncConsumer):
-    
-    @database_sync_to_async
-    def card_choice(self,event):
-        async_to_sync(self.update_table)('table',event['message'],event['player'])
-        async_to_sync(self.channel_layer.group_send)(
-            'table',
-            {
-                'type':'send_table_state',
-                'message':'',
-            }
-        )       
-    
-    @database_sync_to_async
-    def update_table(self, table_name, card, player):
-        table = GameTable.objects.get(table_name=table_name)
-        players = {p.sit:p.user for p in table.players.all()}
-        # print(table.__dict__)
-        print(player)
-        
-        if table.moves_made == 2:
-            if (table.card1 + table.card2) % 2 == 0:
-                table.winner = players[1].username
-            else:
-                table.winner = players[2].username
-            table.moves_made += 1
-            table.save()
-            return
-        
-        elif table.moves_made in [0,1]:
-            p_number = 'p1' if player==players[1].username else 'p2'
-            
-            if p_number == table.to_move:
-                if p_number == 'p1':
-                    table.card1 = card
-                    table.to_move = 'p2'
-                elif p_number == 'p2':
-                    table.card2 = card
-                    table.to_move = 'p1'
-                table.moves_made += 1
-                table.save()
-            return
 
-        elif table.moves_made == 3:
-            if table.to_move == 'p1':
-                table.to_move = 'p2'
-            else:
-                table.to_move = 'p1'
-            table.winner = 'game ongoing'
-            table.card1 = 0
-            table.card2 = 0
-            table.moves_made=0
-            table.save()
-            return
-        
+    @database_sync_to_async
+    def game_update(self, event):
+        action = event['message']['action']
+
+        if action == 'start_round':
+            print('start round request recieved')
+        if action == 'bet':
+            print(f'bet { event["message"]["amount"]} request recieved')
+        if action == 'raise':
+            print(f'raise {event["message"]["amount"]} request recieved')
+        if action == 'call':
+            print('call request recieved')
+        if action == 'fold':
+            print('fold request recieved')
+        if action =='check':
+            print('check request recieved')
+
+        """
+        table = GameTable.objects.get(table_name=table_name)
+        pl = {p.sit:p.user for p in table.players.all()}
+        players = table.players.all()
+        table.first_to_move = min(pl.keys())
+        table.make_queue()
+        table.save()
+       """ 
+
+        # print(table.__dict__)
     
+       
