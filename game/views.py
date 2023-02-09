@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from .models import GameTable
 # Create your views here.
 def game(request,table_name):
-    
+    NUM_OF_SITS = 9
     #print(request.user.username)
     try:
         table = GameTable.objects.get(table_name=table_name)
@@ -15,6 +15,7 @@ def game(request,table_name):
         context={
             'table_name':table_name,
             'player':request.user,
+            'sits':list(range(1,NUM_OF_SITS+1))
         }
         return render(request,'game.html',context)
     else:

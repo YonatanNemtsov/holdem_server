@@ -6,45 +6,33 @@
     <title> Guessing Game </title>
 </head>
 <body>
-
-
-    <div id="player-1">
-        <button class="sit"> sit 1</button>
+    <div class="table-sits">
+    {% for sit in sits %}
+    <div style="display: flex;" id="player-{{ sit }}">
+        <button class="sit"> sit {{ sit }}</button>
         <div> player:
-            <p class="player-name"> </p>   
+            <span class="player-name"> </span>   
             card: 
-            <p class="card"></p>
+            <span class="card"></span>
             chips:
-            <p class="chips"></p>
+            <span class="chips"></span>
         </div>
     </div>
-    <br>
-    <br>
-    <br>
-    <h2 id="log"> Loading Game... </h2>
-    <br>
-    <br>
-    <br>
+    {% endfor %}
+    </div>
 
-    <div id="player-2">
-        <button class="sit"> sit 2</button>
-        <div>player: 
-            <p class="player-name"></p>  
-            card: 
-            <p class="card"></p>
-            chips:
-            <p class="chips"></p>
-        </div>
-    </div>
-    <br>
-    <h2> you:  {{ player }} </h2>
+    <h2 id="log"> Loading Game... </h2>
+    <h3 id="pots"></h3>
+    <p id="turn"></p>
+    <h3 id="community_cards"></h3>
+    <h3 id="table_state"></h3>
+
+
+    <h4> you:  {{ player }} </h2>
 
     <button type="button" value="fold" id="fold"> Fold </button>
-
     <button type="button" value="call" id="call"> Call </button>
-    
     <button type="button" value="check" id="check"> Check </button>
-    
     <button type="button" value="start_round" id="start_round"> Start Round</button>
     
     
@@ -58,6 +46,7 @@
         <button type="submit"> raise</button>
     </div>
 
+    {{ sits|json_script:"sits" }}
     {{ table_name|json_script:"table-name" }}
     {{ player.username|json_script:"user" }}
     {% if player == p1 %}
@@ -71,6 +60,7 @@
         const tableName = JSON.parse(document.getElementById('table-name').textContent);
         /*const sitNumber = JSON.parse(document.getElementById('sit-number').textContent);*/
         const playerName = JSON.parse(document.getElementById('user').textContent);
+
         const gameSocket = new WebSocket(
             'ws://'
             + window.location.host
@@ -84,16 +74,7 @@
             const data = JSON.parse(e.data);
             console.log(data);
             switch (data.type){
-                // might be a good idea to put different cases in seperate functions and call them.
-                /*
-                case 'new_move':
-                    document.querySelector('#log').innerText = (data.message);
-                    break;
-                case 'resign':
-                    document.querySelector('#log').innerText = (data.message);
-                    break;
-                */
-
+                // might be a good idea to put different cases in seperate functions and call them. -Like was done in table_state.
                 case 'table_state':
                     update_table(data);
                     // Recreate table
@@ -105,14 +86,35 @@
         };
 
         function update_table(data){
-            document.querySelector('#log').innerText = 'winner:' + (data.message.winner);
-            document.querySelector('#player-1 .player-name').innerText = (data.message.players['1']['username']);
-            document.querySelector('#player-2 .player-name').innerText = (data.message.players['2']['username']);
-            document.querySelector(('#player-'+data.message.sit+' .card')).innerText = (data.message.card);
-            document.querySelector('#player-1 .chips').innerText = (data.message.players['1']['chips']);
-            document.querySelector('#player-2 .chips').innerText = (data.message.players['2']['chips']);
-        };
+            document.querySelector('#community_cards').innerText = 'shared cards:' + (data.message.community_cards);
+            document.querySelector('#log').innerText = 'last move:';
 
+            
+            for (let sit = 1; sit < 10; sit++) {
+                    document.querySelector('#player-' + sit + ' .player-name').innerText = '';
+                    document.querySelector('#player-' + sit + ' .chips').innerText = '';
+                    document.querySelector('#player-' + sit + ' .card').innerText =  '';
+            };
+            
+            
+            Object.keys(data.message.players).forEach(sit => {
+                document.querySelector('#player-' + sit + ' .player-name').innerText = (data.message.players[sit]['username']);
+                document.querySelector('#player-' + sit + ' .chips').innerText = (data.message.players[sit]['chips']);
+            });
+
+            document.querySelector(('#player-'+data.message.sit+' .card')).innerText = (data.message.card);
+            document.querySelector('#table_state').innerText = 'stage: ' + (data.message.table_state);
+            document.querySelector('#turn').innerText = 'Turn: ' + (data.message.turn);
+
+            let pot_keys = Object.keys(data.message.pots);
+            let pots = new Array()
+            console.log(pot_keys);
+            pot_keys.forEach(key => {
+                pots.push(data.message.pots[key]['pot']);
+            });
+            document.querySelector('#pots').innerText = 'Pots: ' + pots.join(" ");
+        };
+        
         gameSocket.onclose = function(e) {
             // const data = JSON.parse(e.data);
             console.error('Chat socket closed unexpectedly');
@@ -169,9 +171,9 @@
         const startRoundRequestDom = document.querySelector('#start_round');
         startRoundRequestDom.onclick = function() {
             gameSocket.send(JSON.stringify({
-                'type':'game_request',
+                'type':'start_hand_request',
                 'message':{
-                    'action':'start_round'
+                    'action':'start_hand'
                 }
             }));
         }
@@ -187,6 +189,20 @@
         }
 
         // requests to sit at table or leave table
+
+        for (let sit = 1; sit < 10; sit++) {
+            let sitButton = document.querySelector('#player-' + sit + ' .sit');
+            sitButton.onclick = function() {
+                gameSocket.send(JSON.stringify({
+                    'type':'sit_request',
+                    'player':playerName,
+                    'sit':sit
+            }));
+
+        };
+        
+        };
+
         var sitButton1 = document.querySelector('#player-1 .sit');
         sitButton1.onclick = function() {
             gameSocket.send(JSON.stringify({

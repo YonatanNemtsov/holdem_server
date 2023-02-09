@@ -20,41 +20,79 @@ class GameTable(models.Model):
         Player,
     )
     
-    to_move = models.CharField(default=1,max_length=100)
-    moves_made = models.IntegerField(default=0)
-    log = models.JSONField(default=list)
-    winner = models.CharField(default='',max_length=100)
-    pot = models.IntegerField(default=0)
     first_to_move = models.IntegerField(default=1)
+    move_index = models.IntegerField(default=0)
+    # player_status = models.JSONField(default=dict)
+    def make_move_queue(self):
+        queue = {
+            'has_folded':{
+                p.sit:False
+                for p in sorted((self.players.all()), key=lambda x: x.sit)
+            },
 
-    move_queue = models.JSONField(default=list)
-    
-    def make_queue(self):
-        sits_occupied = [p.sit for p in self.players.all()]
-        first = sits_occupied.index(self.first_to_move)
-        self.to_move = first
-        queue = sits_occupied[first:].copy() + sits_occupied[:first].copy()
+            # todo: make queue depend also on first to move
+            'queue':[
+                p.sit for p in sorted((self.players.all()), key=lambda x: x.sit)
+            ]
+            ,
+            'order':[
+                p.sit for p in sorted((self.players.all()), key=lambda x: x.sit)
+            ]
+        }
+
         self.move_queue = queue
+        self.move_index = 0
+    
+    move_queue = models.JSONField(default=dict)
+    last_bet = models.JSONField(default=dict)
+    available_commands = models.JSONField(default=list)
+    
+    
+    def init_bets():
+        return {bet_round:[] for bet_round in [1,2,3,4]}
 
-    TABLE_STATE_CHOICES = (
-        (ENDED:='ENDED','ended'),
-        (ONGOING:='ONGOING','ongoing'), 
-    )
+    bets = models.JSONField(default=init_bets)
+    pots = models.JSONField(default=dict)
+    
+    BIG_BLIND = 10
+    def get_call_amount(self,player:Player):
+        if not self.bets[str(self.table_state)]:
+            return 0
+        
+        call_amount = ( 
+            max((self.get_player_total_bets_in_round(p,self.table_state) for p in self.players.all())))
+        return call_amount
+    
+    def get_min_raise_amount(self):
+        if not self.bets[str(self.table_state)]:
+            return self.BIG_BLIND*2
+        min_raise_amount = 2 * max([bet[2] for bet in self.bets[str(self.table_state)] if bet[1]=='raise']+[0])
+        return min_raise_amount
+    
+    def get_player_total_bets_in_round(self, player: Player, round: int) -> int:
+        return max((bet[2] for bet in self.bets[str(round)] if bet[0]==player.sit), default=0)
+    
 
-    table_state = models.CharField(choices=TABLE_STATE_CHOICES,default=ENDED,max_length=10)
+    class TableState(models.IntegerChoices):
+        ENDED = 0
+        PREFLOP = 1
+        FLOP = 2
+        TURN = 3
+        RIVER = 4
+
+    table_state = models.IntegerField(choices=TableState.choices,default=TableState.ENDED)
+
+    deck = models.JSONField(default=list)
 
     def default_cards():
         return {i:None for i in range(1,10)}
     cards = models.JSONField(default=default_cards)
-
-    def deal_cards(self):
-        sits_occupied = [p.sit for p in self.players.all()]
-        self.cards = {sit:randint(1,13) for sit in sits_occupied}
+    community_cards = models.JSONField(default=list)
 
     def __str__(self):
         return self.table_name
-
-# Many to many example 
+    
+# Many to many example models
 class Member(models.Model):
     name = models.CharField(max_length=100)
     sit = models.IntegerField()
