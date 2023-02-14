@@ -4,6 +4,9 @@ from django.contrib.auth.models import User
 from random import randint
 # Create your models here.
 
+class UserAccount(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    balance = models.IntegerField(default=1000)
 
 class Player (models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -44,8 +47,10 @@ class GameTable(models.Model):
         self.move_index = 0
     
     move_queue = models.JSONField(default=dict)
-    last_bet = models.JSONField(default=dict)
-    available_commands = models.JSONField(default=list)
+    last_bet = models.JSONField(default=dict, null=True, blank=True)
+
+    # to implement soon, refactoring
+    available_commands = models.JSONField(default=list, null=True, blank=True)
     
     
     def init_bets():
@@ -55,23 +60,7 @@ class GameTable(models.Model):
     pots = models.JSONField(default=dict)
     
     BIG_BLIND = 10
-    def get_call_amount(self,player:Player):
-        if not self.bets[str(self.table_state)]:
-            return 0
-        
-        call_amount = ( 
-            max((self.get_player_total_bets_in_round(p,self.table_state) for p in self.players.all())))
-        return call_amount
-    
-    def get_min_raise_amount(self):
-        if not self.bets[str(self.table_state)]:
-            return self.BIG_BLIND*2
-        min_raise_amount = 2 * max([bet[2] for bet in self.bets[str(self.table_state)] if bet[1]=='raise']+[0])
-        return min_raise_amount
-    
-    def get_player_total_bets_in_round(self, player: Player, round: int) -> int:
-        return max((bet[2] for bet in self.bets[str(round)] if bet[0]==player.sit), default=0)
-    
+    MIN_CHIPS_TO_SIT = 100
 
     class TableState(models.IntegerChoices):
         ENDED = 0

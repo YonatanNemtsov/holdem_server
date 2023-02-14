@@ -7,7 +7,7 @@ import deuces.deuces as hand_ranker
 import itertools
 from random import shuffle, randint
 
-from .models import GameTable, Player
+from .models import GameTable, Player, UserAccount
 
 class GameConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
@@ -61,6 +61,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     'table':self.table_name,
                     'sit':content.get('sit',None),
                     'player':content.get('player',None),
+                    'amount':content.get('amount',None),
                     'channel':self.channel_name,
                 }
             )
@@ -76,25 +77,34 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         print(3)
         table = GameTable.objects.get(table_name=event['table'])
         sit = event['sit']
-
-        assert type(sit)==int
+        amount = event['amount']
+        if table.table_state != 0:
+            print("can't sit, game is ongoing")
+            return
+        assert amount > table.MIN_CHIPS_TO_SIT
+        assert type(sit) == int
         assert 0 < sit < 10
         
-        sit_occupation = table.players.filter(sit=sit)
+        user_account = UserAccount.objects.get(user=self.scope['user'])
+        sitting_player = table.players.filter(sit=sit)
+        
         print(table.players)
         print(Player.objects.all())
-        if not sit_occupation:
-            table.players.create(user=self.scope['user'],sit=sit)
+        if not sitting_player:
+            player = table.players.create(user=self.scope['user'], sit=sit, chips=amount)
+            user_account.balance -= amount
+            user_account.save()
             table.save()
-        elif sit_occupation[0].user == self.scope['user']:
-            sit_occupation[0].delete()
+        elif sitting_player[0].user == self.scope['user']:
+            user_account.balance += sitting_player[0].chips
+            user_account.save()
+            sitting_player[0].delete()
             table.save()
-        
+        print(user_account.balance)
         async_to_sync(self.channel_layer.group_send)(
             self.table_name,
             {'type':'send_table_state'}
         )
-        print(11)
 
     @database_sync_to_async
     def send_table_state(self,event):
@@ -144,12 +154,18 @@ def get_player_total_bet(bets: dict, player_sit: int) -> int:
         for round in bets.keys()
     ))]
 
-def get_call_amount(table:GameTable, player:Player):
+def get_call_amount(table:GameTable, player:Player) -> int:
         if not table.bets[str(table.table_state)]:
             return 0
-        player_bet = get_player_total_bet_in_round(table.bets[str(table.table_state)],player.sit)
+        player_bet_in_round = get_player_total_bet_in_round(table.bets[str(table.table_state)],player.sit)
         amount_to_call = max(((get_player_total_bet_in_round(table.bets[str(table.table_state)], p.sit)) for p in table.players.all()), key=lambda x:x[1])
-        return amount_to_call[1] - player_bet[1]
+        return amount_to_call[1] - player_bet_in_round[1]
+
+def get_min_raise_amount(table: GameTable) -> int:
+        if not table.bets[str(table.table_state)]:
+            return table.BIG_BLIND*2
+        min_raise_amount = 2 * max([bet[2] for bet in table.bets[str(table.table_state)] if bet[1]=='raise']+[0])
+        return min_raise_amount
 
 def make_pots(bets: list[list], player_sits: list[int]) -> dict:
     ordered_total_bets = sorted([get_player_total_bet(bets, sit) for sit in player_sits], key=lambda x:x[1])
@@ -238,6 +254,8 @@ class Test(AsyncConsumer):
         
         if table.move_index == len(table.move_queue['queue']) - 1:
             start_next_betting_round(table)
+        else:
+            table.move_index += 1
         table.save()
 
     def bet_request(table: GameTable, player: Player, message: dict) -> None:
@@ -245,7 +263,7 @@ class Test(AsyncConsumer):
 
     def raise_requset(table: GameTable, player: Player, message : dict) -> None:
         amount = int(message["amount"])
-        raise_is_valid = (player.chips >= amount >= table.get_min_raise_amount())
+        raise_is_valid = (player.chips >= amount >= get_min_raise_amount(table))
 
         if not raise_is_valid:
             return
@@ -255,12 +273,14 @@ class Test(AsyncConsumer):
         player.save()
         # table.pots = make_pots(table.bets,table.move_queue['order'])
         move_sit = table.move_queue['queue'][table.move_index]
-
+        remaining_players_in_queue = table.move_queue['queue'][table.move_index+1:]
         table.move_queue['queue'] += (
-            # table.move_queue['order'][table.move_queue['order'].index(move_sit)+1:] +
-            table.move_queue['order'][:table.move_queue['order'].index(move_sit)]
+            [
+                p for p in table.move_queue['order'][:table.move_queue['order'].index(move_sit)]
+                if not p in remaining_players_in_queue
+            ]
         )
-
+    
         table.move_index += 1
         table.save()
     
@@ -280,6 +300,9 @@ class Test(AsyncConsumer):
         table.save()
         
     def check_requset(table: GameTable, player: Player, message: dict) -> None:
+        if get_call_amount(table,player) > 0:
+            print("Check not allowed. Call, Raise, or Fold.")
+            return
         if table.move_index == len(table.move_queue['queue']) - 1:
             print('next round starting')
             start_next_betting_round(table)

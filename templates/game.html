@@ -196,35 +196,12 @@
                 gameSocket.send(JSON.stringify({
                     'type':'sit_request',
                     'player':playerName,
-                    'sit':sit
+                    'sit':sit,
+                    'amount':110,
             }));
 
         };
         
-        };
-
-        var sitButton1 = document.querySelector('#player-1 .sit');
-        sitButton1.onclick = function() {
-            gameSocket.send(JSON.stringify({
-                'type':'sit_request',
-                'player':playerName,
-                'sit':1
-            }));
-
-        };
-
-        var sitButton2 = document.querySelector('#player-2 .sit');
-        sitButton2.onclick = function() {
-            gameSocket.send(JSON.stringify({
-                'type':'sit_request',
-                'player':playerName,
-                'sit':2
-            }));
-
-        };
-
-        function render_table_state(table_state) {
-
         };
 
     </script>
