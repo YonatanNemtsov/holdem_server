@@ -1,51 +1,144 @@
-
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8"/>
     <title> Guessing Game </title>
+    <link rel="stylesheet" href="/static/css/game.css?{% now 'U' %}">
 </head>
 <body>
-    <div class="table-sits">
-    {% for sit in sits %}
-    <div style="display: flex;" id="player-{{ sit }}">
-        <button class="sit"> sit {{ sit }}</button>
-        <div> player:
-            <span class="player-name"> </span>   
-            card: 
-            <span class="card"></span>
-            chips:
-            <span class="chips"></span>
+    <header>
+        header
+    </header>
+    <div id="game-table">
+        <div class="table-sits-top">
+            <div id="player-1">
+                <button class="sit"> sit 1</button>
+                <div> player:
+                    <span class="player-name"> </span>   
+                    <img class=card1 src="" alt="" width="50"> 
+                    <img class="card2" src="" alt="" width="50"/>
+                    chips:
+                    <span class="chips"></span>
+                </div>
+            </div>
+
+            <div id="player-2">
+                <button class="sit"> sit 2</button>
+                <div> player:
+                    <span class="player-name"> </span>   
+                    <img class=card1 src="" alt="" width="50"> 
+                    <img class="card2" src="" alt="" width="50"/>
+                    chips:
+                    <span class="chips"></span>
+                </div>
+            </div>
+
+            <div id="player-3">
+                <button class="sit"> sit 3</button>
+                <div> player:
+                    <span class="player-name"> </span>   
+                    <img class=card1 src="" alt="" width="50"> 
+                    <img class="card2" src="" alt="" width="50"/>
+                    chips:
+                    <span class="chips"></span>
+                </div>
+            </div>
+
+            <div id="player-4">
+                <button class="sit"> sit 4</button>
+                <div> player:
+                    <span class="player-name"> </span>   
+                    <img class=card1 src="" alt="" width="50"> 
+                    <img class="card2" src="" alt="" width="50"/>
+                    chips:
+                    <span class="chips"></span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="table-center">
+            <h2 id="log"> Loading Game... </h2>
+            <h3 id="pots"></h3>
+            <p id="turn"></p>
+            <div id="community_cards">
+            </div>
+            <h3 id="table_state"></h3>
+        </div>
+        
+        <div class="table-sits-bottom">
+            <div id="player-5">
+                <button class="sit"> sit 5</button>
+                <div> player:
+                    <span class="player-name"> </span>   
+                    <img class=card1 src="" alt="" width="50"> 
+                    <img class="card2" src="" alt="" width="50"/>
+                    chips:
+                    <span class="chips"></span>
+                </div>
+            </div>
+
+            <div id="player-6">
+                <button class="sit"> sit 6</button>
+                <div> player:
+                    <span class="player-name"> </span>   
+                    <img class=card1 src="" alt="" width="50"> 
+                    <img class="card2" src="" alt="" width="50"/>
+                    chips:
+                    <span class="chips"></span>
+                </div>
+            </div>
+
+            <div id="player-7">
+                <button class="sit"> sit 7</button>
+                <div> player:
+                    <span class="player-name"> </span>   
+                    <img class=card1 src="" alt="" width="50"> 
+                    <img class="card2" src="" alt="" width="50"/>
+                    chips:
+                    <span class="chips"></span>
+                </div>
+            </div>
+
+            <div id="player-8">
+                <button class="sit"> sit 8</button>
+                <div> player:
+                    <span class="player-name"> </span>   
+                    <img class=card1 src="" alt="" width="50"> 
+                    <img class="card2" src="" alt="" width="50"/>
+                    chips:
+                    <span class="chips"></span>
+                </div>
+            </div>
+
+            <div id="player-9">
+                <button class="sit"> sit 9</button>
+                <div> player:
+                    <span class="player-name"> </span>   
+                    <img class=card1 src="" alt="" width="50"> 
+                    <img class="card2" src="" alt="" width="50"/>
+                    chips:
+                    <span class="chips"></span>
+                </div>
+            </div>
         </div>
     </div>
-    {% endfor %}
-    </div>
 
-    <h2 id="log"> Loading Game... </h2>
-    <h3 id="pots"></h3>
-    <p id="turn"></p>
-    <h3 id="community_cards"></h3>
-    <h3 id="table_state"></h3>
-
-
-    <h4> you:  {{ player }} </h2>
-
-    <button type="button" value="fold" id="fold"> Fold </button>
-    <button type="button" value="call" id="call"> Call </button>
-    <button type="button" value="check" id="check"> Check </button>
-    <button type="button" value="start_round" id="start_round"> Start Round</button>
     
-    
-    <div id="bet">
-        <input type="number">
-        <button type="submit"> bet </button>
-    </div>
-    
-    <div id="raise">
-        <input type="number">
-        <button type="submit"> raise</button>
-    </div>
+    <footer>
+        <h4> you:  {{ player }} </h2>
 
+        <button type="button" value="fold" id="fold"> Fold </button>
+        <button type="button" value="call" id="call"> Call </button>
+        <button type="button" value="check" id="check"> Check </button>
+        <button type="button" value="start_round" id="start_round"> Start Round</button>
+        
+        <div id="raise">
+            <input type="number">
+            <button type="submit"> raise</button>
+        </div>
+    </footer>
+    <div>
     {{ sits|json_script:"sits" }}
     {{ table_name|json_script:"table-name" }}
     {{ player.username|json_script:"user" }}
@@ -55,6 +148,7 @@
     {% if player == p2 %}
     {{ 2|json_script:"sit-number" }}
     {% endif %}
+    </div>
 
     <script>
         const tableName = JSON.parse(document.getElementById('table-name').textContent);
@@ -86,23 +180,43 @@
         };
 
         function update_table(data){
-            document.querySelector('#community_cards').innerText = 'shared cards:' + (data.message.community_cards);
+            //document.querySelector('#community_cards').innerText = 'shared cards:' + (data.message.community_cards);
+            document.getElementById('community_cards').innerHTML='';
+            data.message.community_cards.forEach(card => {
+                let cardImage = document.createElement('img');
+                cardImage.src = '/static/cards/'+card+'.png';
+                cardImage.width = 50;
+                cardImage.alt = card;
+                cardImage.class = 'community-cards';
+                document.getElementById('community_cards').appendChild(cardImage);
+
+            });
             document.querySelector('#log').innerText = 'last move:';
 
-            
             for (let sit = 1; sit < 10; sit++) {
                     document.querySelector('#player-' + sit + ' .player-name').innerText = '';
                     document.querySelector('#player-' + sit + ' .chips').innerText = '';
-                    document.querySelector('#player-' + sit + ' .card').innerText =  '';
+                    document.querySelector('#player-' + sit + ' .card1').src = '';
+                    document.querySelector('#player-' + sit + ' .card2').src = '';
+                    document.querySelector('#player-' + sit + ' .card1').alt = '';
+                    document.querySelector('#player-' + sit + ' .card2').alt = '';
             };
             
             
             Object.keys(data.message.players).forEach(sit => {
                 document.querySelector('#player-' + sit + ' .player-name').innerText = (data.message.players[sit]['username']);
                 document.querySelector('#player-' + sit + ' .chips').innerText = (data.message.players[sit]['chips']);
+                document.querySelector('#player-' + sit + ' .card1').src = '/static/cards/x.png';
+                document.querySelector('#player-' + sit + ' .card2').src = '/static/cards/x.png';
+                document.querySelector('#player-' + sit + ' .card1').alt = 'x';
+                document.querySelector('#player-' + sit + ' .card2').alt = 'x';
             });
 
-            document.querySelector(('#player-'+data.message.sit+' .card')).innerText = (data.message.card);
+            document.querySelector(('#player-'+data.message.sit+' .card1')).src = '/static/cards/'+data.message.card[0]+'.png'
+            document.querySelector(('#player-'+data.message.sit+' .card2')).src = '/static/cards/'+data.message.card[1]+'.png'
+            document.querySelector('#player-' + sit + ' .card1').alt = data.message.card[0];
+            document.querySelector('#player-' + sit + ' .card2').alt = data.message.card[1];
+
             document.querySelector('#table_state').innerText = 'stage: ' + (data.message.table_state);
             document.querySelector('#turn').innerText = 'Turn: ' + (data.message.turn);
 
@@ -122,18 +236,7 @@
 
         // Sending requests over websocket
 
-        const betRequestDom = document.querySelector('#bet button');
-        betRequestDom.onclick = function() {
-            const amount = document.querySelector('#bet input').value;
-            console.log(amount);
-            gameSocket.send(JSON.stringify({
-                'type':'game_request',
-                'message':{
-                    'action':'bet',
-                    'amount':amount,
-                }
-            }));
-        }
+        
 
         const raiseRequestDom = document.querySelector('#raise button');
         raiseRequestDom.onclick = function() {
@@ -198,10 +301,8 @@
                     'player':playerName,
                     'sit':sit,
                     'amount':110,
-            }));
-
-        };
-        
+                }));
+            };
         };
 
     </script>

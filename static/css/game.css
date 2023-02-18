@@ -1,0 +1,39 @@
+body {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    background-color:green;
+}
+
+#game-table {
+    flex-direction: column;
+    flex-wrap: wrap;
+    display: flex;
+    flex: 1;
+}
+
+.table-sits-top {
+    display: flex;
+    flex-direction: row;
+    align-self: center;
+    flex: 1;
+}
+
+.table-sits-bottom {
+    align-self: center;
+    flex-direction: row;
+    display: flex;
+    flex: 1;
+}
+
+#table-center {
+    flex: 1;
+    align-self: center;
+}
+
+
+header, footer {
+    background: yellowgreen;
+    height: 20vh;
+    flex: 1;
+  }

@@ -13,6 +13,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self.table_name = self.scope['url_route']['kwargs']['table_name'] 
         print(self.scope['user'].id, self.scope['user'].username)
+
+        
         await self.accept()
         #sleep(0.4)
         await self.channel_layer.group_add('table', self.channel_name)
