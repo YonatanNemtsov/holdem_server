@@ -1,13 +1,15 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import get_user_model, login
-
+from game.models import UserAccount
 from .forms import NewUserForm
 
 # Create your views here.
 def home(request):
-
-    user = request.user
-    return render(request,'home.html',context={'user':user})
+	user = request.user
+	context = {'user':user}
+	if user.is_authenticated:
+		context['balance'] = UserAccount.objects.get(user=user).balance
+	return render(request,'home.html',context=context)
 
 def register_request(request):
 	if request.method == "POST":

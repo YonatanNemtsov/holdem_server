@@ -1,58 +1,60 @@
-{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8"/>
     <title> Guessing Game </title>
+    {%block style%}
     <link rel="stylesheet" href="/static/css/game.css?{% now 'U' %}">
+    {%endblock style%}
 </head>
 <body>
     <header>
-        header
+        Hi {{player}}!
+        Your Balance: {{balance}}$
     </header>
     <div id="game-table">
         <div class="table-sits-top">
             <div id="player-1">
                 <button class="sit"> sit 1</button>
                 <div> player:
-                    <span class="player-name"> </span>   
+                    <span class="player-name"> </span> <br>  
+                    chips:
+                    <span class="chips"></span> <br>
                     <img class=card1 src="" alt="" width="50"> 
                     <img class="card2" src="" alt="" width="50"/>
-                    chips:
-                    <span class="chips"></span>
                 </div>
             </div>
 
             <div id="player-2">
                 <button class="sit"> sit 2</button>
                 <div> player:
-                    <span class="player-name"> </span>   
+                    <span class="player-name"> </span> <br>  
+                    chips:
+                    <span class="chips"></span> <br>
                     <img class=card1 src="" alt="" width="50"> 
                     <img class="card2" src="" alt="" width="50"/>
-                    chips:
-                    <span class="chips"></span>
                 </div>
             </div>
 
             <div id="player-3">
                 <button class="sit"> sit 3</button>
                 <div> player:
-                    <span class="player-name"> </span>   
+                    <span class="player-name"> </span> <br>  
+                    chips:
+                    <span class="chips"></span> <br>
                     <img class=card1 src="" alt="" width="50"> 
                     <img class="card2" src="" alt="" width="50"/>
-                    chips:
-                    <span class="chips"></span>
                 </div>
             </div>
 
             <div id="player-4">
                 <button class="sit"> sit 4</button>
                 <div> player:
-                    <span class="player-name"> </span>   
+                    <span class="player-name"> </span> <br>  
+                    chips:
+                    <span class="chips"></span> <br>
                     <img class=card1 src="" alt="" width="50"> 
                     <img class="card2" src="" alt="" width="50"/>
-                    chips:
-                    <span class="chips"></span>
                 </div>
             </div>
         </div>
@@ -70,55 +72,55 @@
             <div id="player-5">
                 <button class="sit"> sit 5</button>
                 <div> player:
-                    <span class="player-name"> </span>   
+                    <span class="player-name"> </span> <br>  
+                    chips:
+                    <span class="chips"></span> <br>
                     <img class=card1 src="" alt="" width="50"> 
                     <img class="card2" src="" alt="" width="50"/>
-                    chips:
-                    <span class="chips"></span>
                 </div>
             </div>
 
             <div id="player-6">
                 <button class="sit"> sit 6</button>
                 <div> player:
-                    <span class="player-name"> </span>   
+                    <span class="player-name"> </span> <br>  
+                    chips:
+                    <span class="chips"></span> <br>
                     <img class=card1 src="" alt="" width="50"> 
                     <img class="card2" src="" alt="" width="50"/>
-                    chips:
-                    <span class="chips"></span>
                 </div>
             </div>
 
             <div id="player-7">
                 <button class="sit"> sit 7</button>
                 <div> player:
-                    <span class="player-name"> </span>   
+                    <span class="player-name"> </span> <br>  
+                    chips:
+                    <span class="chips"></span> <br>
                     <img class=card1 src="" alt="" width="50"> 
                     <img class="card2" src="" alt="" width="50"/>
-                    chips:
-                    <span class="chips"></span>
                 </div>
             </div>
 
             <div id="player-8">
                 <button class="sit"> sit 8</button>
                 <div> player:
-                    <span class="player-name"> </span>   
+                    <span class="player-name"> </span> <br>  
+                    chips:
+                    <span class="chips"></span> <br>
                     <img class=card1 src="" alt="" width="50"> 
                     <img class="card2" src="" alt="" width="50"/>
-                    chips:
-                    <span class="chips"></span>
                 </div>
             </div>
 
             <div id="player-9">
                 <button class="sit"> sit 9</button>
                 <div> player:
-                    <span class="player-name"> </span>   
+                    <span class="player-name"> </span> <br>  
+                    chips:
+                    <span class="chips"></span> <br>
                     <img class=card1 src="" alt="" width="50"> 
                     <img class="card2" src="" alt="" width="50"/>
-                    chips:
-                    <span class="chips"></span>
                 </div>
             </div>
         </div>

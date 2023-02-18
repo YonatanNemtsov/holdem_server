@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from .models import GameTable
+from .models import GameTable,UserAccount
 # Create your views here.
 def game(request,table_name):
     NUM_OF_SITS = 9
@@ -15,7 +15,8 @@ def game(request,table_name):
         context={
             'table_name':table_name,
             'player':request.user,
-            'sits':list(range(1,NUM_OF_SITS+1))
+            'sits':list(range(1,NUM_OF_SITS+1)),
+            'balance':UserAccount.objects.get(user=request.user).balance
         }
         return render(request,'game.html',context)
     else:
