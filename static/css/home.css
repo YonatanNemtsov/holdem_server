@@ -1,0 +1,15 @@
+
+
+body {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    background-color:green;
+}
+
+
+header {
+    background: yellowgreen;
+    height: 20vh;
+    flex: 1;
+  }

@@ -1,0 +1,72 @@
+body {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    background-color:green;
+}
+
+#game-table {
+    flex-direction: column;
+    flex-wrap: wrap;
+    display: flex;
+    flex: 1;
+}
+
+.table-sits-top, .table-sits-bottom {
+    display: flex;
+    flex-direction: row;
+    align-self: center;
+    flex: 1;
+}
+
+.table-sits-top > div {
+    width: 130px;
+}
+
+.table-sits-bottom > div {
+    width: 130px;
+}
+
+#table-center {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    align-self: center;
+}
+.player-name {
+    color: blue;
+    font-size: large;
+}
+.chips {
+    color: red;
+    font-size: large;
+}
+
+.last-move {
+    color: red;
+    font-size: large;
+}
+
+.has-folded {
+    color: red;
+    font-size: large;
+}
+
+header, footer {
+    background: yellowgreen;
+    height: 50vh;
+    flex: 1;
+}
+#community_cards {
+    display: flex;
+    flex-direction: row;
+}
+.community-card {
+    padding: 0.1%;
+}
+
+.messages {
+    display: flex;
+    flex-direction: column;
+    
+}

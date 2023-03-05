@@ -20,12 +20,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-%_ocsr(qiqq!a!axk43=grex2&_batfswei(&89ks%mo@j&ng7'
+
+with open('key.txt','r') as f:
+    SECRET_KEY = f.readline().strip()
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['.localhost', '127.0.0.1','0.0.0.0','holdem.ynemtsov.com']
+CSRF_TRUSTED_ORIGINS = ['https://holdem.ynemtsov.com']
 
 
 # Application definition
@@ -122,8 +126,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
+#STATIC_ROOT = '/home/ubuntu/poker_app/app/static'
+
 STATIC_URL = 'static/'
 
+STATICFILES_DIRS = [
+    "static",
+    "static/admin"
+    ]
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 

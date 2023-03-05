@@ -4,6 +4,9 @@ from django.contrib.auth.models import User
 from random import randint
 # Create your models here.
 
+class UserAccount(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    balance = models.IntegerField(default=1000)
 
 class Player (models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -18,6 +21,8 @@ class GameTable(models.Model):
 
     players = models.ManyToManyField(
         Player,
+        blank=True,
+        null=True
     )
     
     first_to_move = models.IntegerField(default=1)
@@ -44,34 +49,20 @@ class GameTable(models.Model):
         self.move_index = 0
     
     move_queue = models.JSONField(default=dict)
-    last_bet = models.JSONField(default=dict)
-    available_commands = models.JSONField(default=list)
+    last_bet = models.JSONField(default=dict, null=True, blank=True)
+
+    # to implement soon, refactoring
+    available_commands = models.JSONField(default=list, null=True, blank=True)
     
     
     def init_bets():
         return {bet_round:[] for bet_round in [1,2,3,4]}
 
     bets = models.JSONField(default=init_bets)
-    pots = models.JSONField(default=dict)
-    
+    pots = models.JSONField(default=dict, blank=True)
+    winners =  models.JSONField(default=dict, blank=True)
     BIG_BLIND = 10
-    def get_call_amount(self,player:Player):
-        if not self.bets[str(self.table_state)]:
-            return 0
-        
-        call_amount = ( 
-            max((self.get_player_total_bets_in_round(p,self.table_state) for p in self.players.all())))
-        return call_amount
-    
-    def get_min_raise_amount(self):
-        if not self.bets[str(self.table_state)]:
-            return self.BIG_BLIND*2
-        min_raise_amount = 2 * max([bet[2] for bet in self.bets[str(self.table_state)] if bet[1]=='raise']+[0])
-        return min_raise_amount
-    
-    def get_player_total_bets_in_round(self, player: Player, round: int) -> int:
-        return max((bet[2] for bet in self.bets[str(round)] if bet[0]==player.sit), default=0)
-    
+    MIN_CHIPS_TO_SIT = 100
 
     class TableState(models.IntegerChoices):
         ENDED = 0
@@ -79,15 +70,17 @@ class GameTable(models.Model):
         FLOP = 2
         TURN = 3
         RIVER = 4
+        SHOW_DOWN = 5
+        NO_SHOW_DOWN = 6
 
     table_state = models.IntegerField(choices=TableState.choices,default=TableState.ENDED)
-
+    
     deck = models.JSONField(default=list)
 
     def default_cards():
         return {i:None for i in range(1,10)}
     cards = models.JSONField(default=default_cards)
-    community_cards = models.JSONField(default=list)
+    community_cards = models.JSONField(default=list,blank=True)
 
     def __str__(self):
         return self.table_name
