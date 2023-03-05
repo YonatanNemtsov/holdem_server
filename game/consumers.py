@@ -225,12 +225,15 @@ def determine_winners(players: list[Player], table: GameTable) -> list[Player]:
     return winners
 
 def distribute_pot(table: GameTable):
+    table.winners = dict()
     for bet_rank in table.pots:
         players = [p for p in table.players.all() if p.sit in table.pots[bet_rank]['players']]
         winners = determine_winners(players,table)
-        table.winners = dict()
         for winner in winners:
-            table.winners[winner.sit] = table.pots[bet_rank]['pot']//len(winners)
+            if winner.sit in table.winners:
+                table.winners[winner.sit] += table.pots[bet_rank]['pot']//len(winners)
+            else: 
+                table.winners[winner.sit] = table.pots[bet_rank]['pot']//len(winners)
             winner.chips += table.pots[bet_rank]['pot']//len(winners)
             winner.save()
     

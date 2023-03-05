@@ -254,15 +254,14 @@
             document.querySelector('#player-' + data.message.sit + ' .card2').alt = data.message.card[1];
 
             document.querySelector('#table_state').innerText = 'stage: ' + (data.message.table_state);
-            document.querySelector('#turn').innerText = 'Turn: ' + (data.message.turn);
-
+            document.querySelector('#turn').innerText = data.message.players[(data.message.turn)]['username'] + "'s" + ' Turn';
             let pot_keys = Object.keys(data.message.pots);
             let pots = new Array()
             console.log(pot_keys);
             pot_keys.forEach(key => {
                 pots.push(data.message.pots[key]['pot']);
             });
-            document.querySelector('#pots').innerText = 'Pots: ' + pots.join(" ");
+            document.querySelector('#pots').innerText = pots.join(" ");
             
             Object.keys(data.message.show_cards).forEach(sit => {
                 console.log(data.message.show_cards[sit]);
