@@ -1,6 +1,14 @@
 {% extends 'base.html' %}
 
+{% block title %}  <title> Holdem </title> {% endblock title %}
+{% block style %} 
+<link rel="stylesheet" type="text/css" href="/static/css/home.css?{% now 'U' %}"> 
+<link rel="icon" href="/static/favicon.ico">
+{% endblock style %}
+
 {% block content %}
 <br>
 <a href="/game/table/">game</a>
+
+<p>hello</p>
 {% endblock content %}

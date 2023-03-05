@@ -1,10 +1,12 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8"/>
-    <title> Guessing Game </title>
+    <title> Holdem </title>
     {%block style%}
-    <link rel="stylesheet" href="/static/css/game.css?{% now 'U' %}">
+    <link rel="stylesheet" type="text/css" href="/static/css/game.css?{% now 'U' %}">
+    <link rel="icon" href="/static/favicon.ico">
     {%endblock style%}
 </head>
 <body>
@@ -15,112 +17,133 @@
     <div id="game-table">
         <div class="table-sits-top">
             <div id="player-1">
+                
                 <button class="sit"> sit 1</button>
-                <div> player:
-                    <span class="player-name"> </span> <br>  
-                    chips:
+                <div>
+                    <span class="has-folded"></span>
+                    <span class="player-name"> </span>
                     <span class="chips"></span> <br>
-                    <img class=card1 src="" alt="" width="50"> 
-                    <img class="card2" src="" alt="" width="50"/>
+                    <img class=card1 src="" alt="" width="60"> 
+                    <img class="card2" src="" alt="" width="60"/>
                 </div>
+                <p class="last-move"></p>
+                
             </div>
-
+            
             <div id="player-2">
-                <button class="sit"> sit 2</button>
-                <div> player:
-                    <span class="player-name"> </span> <br>  
-                    chips:
+                <button class="sit">sit 2</button>
+                <div>
+                    <span class="has-folded"></span>
+                    <span class="player-name"> </span>  
                     <span class="chips"></span> <br>
-                    <img class=card1 src="" alt="" width="50"> 
-                    <img class="card2" src="" alt="" width="50"/>
+                    <img class=card1 src="" alt="" width="60"> 
+                    <img class="card2" src="" alt="" width="60"/>
                 </div>
+                <p class="last-move"></p>
+                
             </div>
 
             <div id="player-3">
-                <button class="sit"> sit 3</button>
-                <div> player:
-                    <span class="player-name"> </span> <br>  
-                    chips:
+                <button class="sit">sit 3</button>
+                <div>
+                    <span class="has-folded"></span>
+                    <span class="player-name"> </span>  
                     <span class="chips"></span> <br>
-                    <img class=card1 src="" alt="" width="50"> 
-                    <img class="card2" src="" alt="" width="50"/>
+                    <img class=card1 src="" alt="" width="60"> 
+                    <img class="card2" src="" alt="" width="60"/>
                 </div>
+                <p class="last-move"></p>
+                
             </div>
 
             <div id="player-4">
-                <button class="sit"> sit 4</button>
-                <div> player:
-                    <span class="player-name"> </span> <br>  
-                    chips:
+                <button class="sit">sit 4</button>
+                <div>
+                    <span class="has-folded"></span>
+                    <span class="player-name"> </span>  
                     <span class="chips"></span> <br>
-                    <img class=card1 src="" alt="" width="50"> 
-                    <img class="card2" src="" alt="" width="50"/>
+                    <img class=card1 src="" alt="" width="60"> 
+                    <img class="card2" src="" alt="" width="60"/>
                 </div>
+                <p class="last-move"></p>
+                
             </div>
         </div>
-        
+
         <div id="table-center">
-            <h2 id="log"> Loading Game... </h2>
-            <h3 id="pots"></h3>
-            <p id="turn"></p>
-            <div id="community_cards">
+            <div id="log"> Loading Game... </div>
+            <div id="game-messages"> </div>
+            <div class="messages">
+                <div id="pots"></div>
+                <div id="turn"></div>
+                <div id="table_state"></div>
             </div>
-            <h3 id="table_state"></h3>
+
+            <div id="community_cards"></div>
         </div>
         
         <div class="table-sits-bottom">
             <div id="player-5">
+                <p class="last-move"></p>
+                
                 <button class="sit"> sit 5</button>
-                <div> player:
-                    <span class="player-name"> </span> <br>  
-                    chips:
+                <div>
+                    <span class="has-folded"></span>
+                    <span class="player-name"> </span>
                     <span class="chips"></span> <br>
-                    <img class=card1 src="" alt="" width="50"> 
-                    <img class="card2" src="" alt="" width="50"/>
+                    <img class=card1 src="" alt="" width="60"> 
+                    <img class="card2" src="" alt="" width="60"/>
                 </div>
             </div>
 
             <div id="player-6">
+                <p class="last-move"></p>
                 <button class="sit"> sit 6</button>
-                <div> player:
-                    <span class="player-name"> </span> <br>  
-                    chips:
+                <div>
+                    <span class="has-folded"></span>
+                    <span class="player-name"> </span>
                     <span class="chips"></span> <br>
-                    <img class=card1 src="" alt="" width="50"> 
-                    <img class="card2" src="" alt="" width="50"/>
+                    <img class=card1 src="" alt="" width="60"> 
+                    <img class="card2" src="" alt="" width="60"/>
                 </div>
             </div>
 
             <div id="player-7">
+                <p class="last-move"></p>
+                
                 <button class="sit"> sit 7</button>
-                <div> player:
-                    <span class="player-name"> </span> <br>  
-                    chips:
+                <div>
+                    <span class="has-folded"></span>
+                    <span class="player-name"> </span>
                     <span class="chips"></span> <br>
-                    <img class=card1 src="" alt="" width="50"> 
-                    <img class="card2" src="" alt="" width="50"/>
+                    <img class=card1 src="" alt="" width="60"> 
+                    <img class="card2" src="" alt="" width="60"/>
                 </div>
             </div>
 
             <div id="player-8">
+                <p class="last-move"></p>
+                
                 <button class="sit"> sit 8</button>
-                <div> player:
-                    <span class="player-name"> </span> <br>  
-                    chips:
+                <div>
+                    <span class="has-folded"></span>
+                    <span class="player-name"> </span>
                     <span class="chips"></span> <br>
-                    <img class=card1 src="" alt="" width="50"> 
-                    <img class="card2" src="" alt="" width="50"/>
+                    <img class=card1 src="" alt="" width="60"> 
+                    <img class="card2" src="" alt="" width="60"/>
                 </div>
             </div>
 
             <div id="player-9">
+                <p class="last-move"></p>
+                
                 <button class="sit"> sit 9</button>
-                <div> player:
-                    <span class="player-name"> </span> <br>  
-                    chips:
+                <div>
+                    <span class="has-folded"></span>
+                    <span class="player-name"> </span>
                     <span class="chips"></span> <br>
-                    <img class=card1 src="" alt="" width="50"> 
-                    <img class="card2" src="" alt="" width="50"/>
+                    <img class=card1 src="" alt="" width="60"> 
+                    <img class="card2" src="" alt="" width="60"/>
                 </div>
             </div>
         </div>
@@ -128,16 +151,16 @@
 
     
     <footer>
-        <h4> you:  {{ player }} </h2>
-
-        <button type="button" value="fold" id="fold"> Fold </button>
-        <button type="button" value="call" id="call"> Call </button>
-        <button type="button" value="check" id="check"> Check </button>
-        <button type="button" value="start_round" id="start_round"> Start Round</button>
-        
-        <div id="raise">
-            <input type="number">
-            <button type="submit"> raise</button>
+        <div id="game-controls">
+            <button type="button" value="fold" id="fold"> Fold </button>
+            <button type="button" value="call" id="call"> Call </button>
+            <button type="button" value="check" id="check"> Check </button>
+            <button type="button" value="start_round" id="start_round"> Start Round</button>
+            
+            <div id="raise">
+                <input type="number">
+                <button type="submit"> raise</button>
+            </div>
         </div>
     </footer>
     <div>
@@ -187,13 +210,14 @@
             data.message.community_cards.forEach(card => {
                 let cardImage = document.createElement('img');
                 cardImage.src = '/static/cards/'+card+'.png';
-                cardImage.width = 50;
+                cardImage.width = 60;
+                cardImage.height = 87;
                 cardImage.alt = card;
-                cardImage.class = 'community-cards';
+                cardImage.setAttribute("class", "community-card");
                 document.getElementById('community_cards').appendChild(cardImage);
 
             });
-            document.querySelector('#log').innerText = 'last move:';
+            document.querySelector('#log').innerText = '';
 
             for (let sit = 1; sit < 10; sit++) {
                     document.querySelector('#player-' + sit + ' .player-name').innerText = '';
@@ -202,7 +226,8 @@
                     document.querySelector('#player-' + sit + ' .card2').src = '';
                     document.querySelector('#player-' + sit + ' .card1').alt = '';
                     document.querySelector('#player-' + sit + ' .card2').alt = '';
-            };
+                    document.querySelector('#player-' + sit + ' .has-folded').innerText = '';
+                }
             
             
             Object.keys(data.message.players).forEach(sit => {
@@ -212,12 +237,21 @@
                 document.querySelector('#player-' + sit + ' .card2').src = '/static/cards/x.png';
                 document.querySelector('#player-' + sit + ' .card1').alt = 'x';
                 document.querySelector('#player-' + sit + ' .card2').alt = 'x';
+                document.querySelector('#player-' + sit + ' .last-move').innerText = '';
+                if (data.message.has_folded[sit]) {
+                    document.querySelector('#player-' + sit + ' .has-folded').innerText = 'folded';
+                }
+                
             });
 
-            document.querySelector(('#player-'+data.message.sit+' .card1')).src = '/static/cards/'+data.message.card[0]+'.png'
-            document.querySelector(('#player-'+data.message.sit+' .card2')).src = '/static/cards/'+data.message.card[1]+'.png'
-            document.querySelector('#player-' + sit + ' .card1').alt = data.message.card[0];
-            document.querySelector('#player-' + sit + ' .card2').alt = data.message.card[1];
+            Object.keys(data.message.last_moves).forEach(sit => {
+                document.querySelector('#player-' + sit + ' .last-move').innerText = data.message.last_moves[sit];
+            })
+
+            document.querySelector(('#player-'+data.message.sit+' .card1')).src = '/static/cards/'+data.message.card[0]+'.png';
+            document.querySelector(('#player-'+data.message.sit+' .card2')).src = '/static/cards/'+data.message.card[1]+'.png';
+            document.querySelector('#player-' + data.message.sit + ' .card1').alt = data.message.card[0];
+            document.querySelector('#player-' + data.message.sit + ' .card2').alt = data.message.card[1];
 
             document.querySelector('#table_state').innerText = 'stage: ' + (data.message.table_state);
             document.querySelector('#turn').innerText = 'Turn: ' + (data.message.turn);
@@ -229,6 +263,25 @@
                 pots.push(data.message.pots[key]['pot']);
             });
             document.querySelector('#pots').innerText = 'Pots: ' + pots.join(" ");
+            
+            Object.keys(data.message.show_cards).forEach(sit => {
+                console.log(data.message.show_cards[sit]);
+                document.querySelector(('#player-'+ sit +' .card1')).src = '/static/cards/'+data.message.show_cards[sit][0]+'.png';
+                document.querySelector(('#player-'+ sit +' .card2')).src = '/static/cards/'+data.message.show_cards[sit][1]+'.png';
+            });
+
+            document.querySelector('#game-messages').innerHTML = '';
+            if (data.message.table_state == 0) {
+                console.log('game ended');
+                Object.keys(data.message.winners).forEach(winner => {
+                    console.log(winner);
+                    var w = document.createElement('p');
+                    w.innerText = (winner + ' wins ' + data.message.winners[winner]);
+                    document.querySelector('#game-messages').appendChild(w);
+                });
+            }
+            
+
         };
         
         gameSocket.onclose = function(e) {

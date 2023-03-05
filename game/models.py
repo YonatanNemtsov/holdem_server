@@ -21,6 +21,8 @@ class GameTable(models.Model):
 
     players = models.ManyToManyField(
         Player,
+        blank=True,
+        null=True
     )
     
     first_to_move = models.IntegerField(default=1)
@@ -57,8 +59,8 @@ class GameTable(models.Model):
         return {bet_round:[] for bet_round in [1,2,3,4]}
 
     bets = models.JSONField(default=init_bets)
-    pots = models.JSONField(default=dict)
-    
+    pots = models.JSONField(default=dict, blank=True)
+    winners =  models.JSONField(default=dict, blank=True)
     BIG_BLIND = 10
     MIN_CHIPS_TO_SIT = 100
 
@@ -68,15 +70,17 @@ class GameTable(models.Model):
         FLOP = 2
         TURN = 3
         RIVER = 4
+        SHOW_DOWN = 5
+        NO_SHOW_DOWN = 6
 
     table_state = models.IntegerField(choices=TableState.choices,default=TableState.ENDED)
-
+    
     deck = models.JSONField(default=list)
 
     def default_cards():
         return {i:None for i in range(1,10)}
     cards = models.JSONField(default=default_cards)
-    community_cards = models.JSONField(default=list)
+    community_cards = models.JSONField(default=list,blank=True)
 
     def __str__(self):
         return self.table_name
