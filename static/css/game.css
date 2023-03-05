@@ -41,10 +41,15 @@ body {
     color: red;
     font-size: large;
 }
-
 .last-move {
     color: red;
     font-size: large;
+}
+
+#pots {
+    color: red;
+    font-size: large;
+
 }
 
 .has-folded {
