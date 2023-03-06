@@ -75,3 +75,8 @@ header, footer {
     flex-direction: column;
     
 }
+
+#game-messages {
+    padding-right: 20px;
+    
+}

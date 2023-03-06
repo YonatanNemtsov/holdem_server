@@ -7,8 +7,19 @@
 {% endblock style %}
 
 {% block content %}
+<h1> Welcome! </h1>
+{% if user.is_authenticated %}
+<h2> Choose a table </h2>
 <br>
-<a href="/game/table/">game</a>
+<div id="tables">
+    {% for table_name in table_names %}
+    <a href="/game/{{table_name}}/"> {{table_name}} </a><br>
+    {% endfor %}
+</div>
+{% else %}
+<h2> log in to view tables </h2>
 
-<p>hello</p>
+{% endif %}
+
+
 {% endblock content %}

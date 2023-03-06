@@ -17,7 +17,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         
         await self.accept()
         #sleep(0.4)
-        await self.channel_layer.group_add('table', self.channel_name)
+        await self.channel_layer.group_add(self.table_name, self.channel_name)
         await self.channel_layer.send(
             self.channel_name,
             {'type':'send_table_state'}
@@ -71,7 +71,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         return
         
     async def disconnect(self, code):
-        await self.channel_layer.group_discard('table',self.channel_name)
+        await self.channel_layer.group_discard(self.table_name,self.channel_name)
         return await self.close()
 
     @database_sync_to_async
@@ -93,7 +93,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         print(table.players)
         print(Player.objects.all())
         if not sitting_player:
-            player = table.players.create(user=self.scope['user'], sit=sit, chips=amount)
+            player = table.players.create(user=self.scope['user'], sit=sit, chips=amount, table_name=table.table_name)
             user_account.balance -= amount
             user_account.save()
             table.save()
@@ -360,7 +360,7 @@ class Test(AsyncConsumer):
         message = event['message']
         action = message['action']
         table = GameTable.objects.get(table_name=event['table'])
-        player = Player.objects.get(user=User.objects.get(id=event['user_id']))
+        player = table.players.get(user=User.objects.get(id=event['user_id']))
         print(table.move_index,table.move_queue['queue'])
         print(table.move_queue['order'])
         # verification 
@@ -409,7 +409,7 @@ class Test(AsyncConsumer):
         # parse message info
         message = event['message']
         table = GameTable.objects.get(table_name=event['table'])
-        player = Player.objects.get(user=User.objects.get(id=event['user_id']))
+        player = table.players.get(user=User.objects.get(id=event['user_id']))
         if len(table.players.all())==1:
             print("can't start round, need at least two players")
             return 

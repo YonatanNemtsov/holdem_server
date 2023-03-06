@@ -253,8 +253,15 @@
             document.querySelector('#player-' + data.message.sit + ' .card1').alt = data.message.card[0];
             document.querySelector('#player-' + data.message.sit + ' .card2').alt = data.message.card[1];
 
-            document.querySelector('#table_state').innerText = 'stage: ' + (data.message.table_state);
-            document.querySelector('#turn').innerText = data.message.players[(data.message.turn)]['username'] + "'s" + ' Turn';
+            let states = {
+                "0":"Hand ended",
+                "1":"Preflop",
+                "2":"Flop",
+                "3":"Turn",
+                "4":"River",
+            };
+            document.querySelector('#table_state').innerText = 'stage: ' + states[data.message.table_state];
+            document.querySelector('#turn').innerText = data.message.players[(data.message.turn)]['username'] + "'s" + ' turn.';
             let pot_keys = Object.keys(data.message.pots);
             let pots = new Array()
             console.log(pot_keys);
@@ -274,7 +281,7 @@
                 console.log('game ended');
                 Object.keys(data.message.winners).forEach(winner => {
                     console.log(winner);
-                    var w = document.createElement('p');
+                    let w = document.createElement('p');
                     w.innerText = (winner + ' wins ' + data.message.winners[winner]);
                     document.querySelector('#game-messages').appendChild(w);
                 });

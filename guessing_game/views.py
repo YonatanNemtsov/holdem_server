@@ -1,12 +1,13 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import get_user_model, login
-from game.models import UserAccount
+from game.models import UserAccount, GameTable
 from .forms import NewUserForm
 
 # Create your views here.
 def home(request):
 	user = request.user
-	context = {'user':user}
+	table_names = [table.table_name for table in GameTable.objects.all()]
+	context = {'user':user,'table_names':table_names}
 	if user.is_authenticated:
 		context['balance'] = UserAccount.objects.get(user=user).balance
 	return render(request,'home.html',context=context)

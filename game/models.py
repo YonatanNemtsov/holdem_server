@@ -9,11 +9,12 @@ class UserAccount(models.Model):
     balance = models.IntegerField(default=1000)
 
 class Player (models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    table_name = models.CharField(max_length=100,default='',blank=True)
     sit = models.IntegerField()
     chips = models.IntegerField(default=100)
     def __str__(self):
-        return f'{self.sit} {self.user.username}'
+        return f'{self.table_name} {self.sit} {self.user.username}'
 
 class GameTable(models.Model):
     # need to rewrite more elegantly.
