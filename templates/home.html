@@ -12,8 +12,8 @@
 <h2> Choose a table </h2>
 <br>
 <div id="tables">
-    {% for table_name in table_names %}
-    <a href="/game/{{table_name}}/"> {{table_name}} </a><br>
+    {% for table in tables %}
+    <a href="/game/{{table.id}}/"> {{table.name}} </a><br>
     {% endfor %}
 </div>
 {% else %}

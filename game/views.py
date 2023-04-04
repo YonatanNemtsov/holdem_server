@@ -2,18 +2,18 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from .models import GameTable,UserAccount
 # Create your views here.
-def game(request,table_name):
+def game(request,table_id):
     NUM_OF_SITS = 9
     #print(request.user.username)
     try:
-        table = GameTable.objects.get(table_name=table_name)
+        table = GameTable.objects.get(id=table_id)
     except:
         return HttpResponse('not found',status=404)
     
 
     if request.user.is_authenticated:
         context={
-            'table_name':table_name,
+            'table_id':table_id,
             'player':request.user,
             'sits':list(range(1,NUM_OF_SITS+1)),
             'balance':UserAccount.objects.get(user=request.user).balance

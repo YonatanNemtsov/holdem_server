@@ -165,7 +165,7 @@
     </footer>
     <div>
     {{ sits|json_script:"sits" }}
-    {{ table_name|json_script:"table-name" }}
+    {{ table_id|json_script:"table-id" }}
     {{ player.username|json_script:"user" }}
     {% if player == p1 %}
     {{ 1|json_script:"sit-number" }}
@@ -176,7 +176,7 @@
     </div>
 
     <script>
-        const tableName = JSON.parse(document.getElementById('table-name').textContent);
+        const tableName = JSON.parse(document.getElementById('table-id').textContent);
         /*const sitNumber = JSON.parse(document.getElementById('sit-number').textContent);*/
         const playerName = JSON.parse(document.getElementById('user').textContent);
 
@@ -245,7 +245,10 @@
             });
 
             Object.keys(data.message.last_moves).forEach(sit => {
-                document.querySelector('#player-' + sit + ' .last-move').innerText = data.message.last_moves[sit];
+                document.querySelector('#player-' + sit + ' .last-move').innerText = data.message.last_moves[sit][0];
+                if (data.message.last_moves[sit][1]>0) {
+                    document.querySelector('#player-' + sit + ' .last-move').innerText += ' ' + data.message.last_moves[sit][1];
+                }
             })
 
             document.querySelector(('#player-'+data.message.sit+' .card1')).src = '/static/cards/'+data.message.card[0]+'.png';
@@ -282,7 +285,7 @@
                 Object.keys(data.message.winners).forEach(winner => {
                     console.log(winner);
                     let w = document.createElement('p');
-                    w.innerText = (winner + ' wins ' + data.message.winners[winner]);
+                    w.innerText = (data.message.players[winner]['username'] + ' wins ' + data.message.winners[winner]);
                     document.querySelector('#game-messages').appendChild(w);
                 });
             }

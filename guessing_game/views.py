@@ -6,8 +6,8 @@ from .forms import NewUserForm
 # Create your views here.
 def home(request):
 	user = request.user
-	table_names = [table.table_name for table in GameTable.objects.all()]
-	context = {'user':user,'table_names':table_names}
+	tables = [{'id':table.id,'name':table.table_name} for table in GameTable.objects.all()]
+	context = {'user':user,'tables':tables}
 	if user.is_authenticated:
 		context['balance'] = UserAccount.objects.get(user=user).balance
 	return render(request,'home.html',context=context)

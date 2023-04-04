@@ -23,11 +23,4 @@ from game import consumers
 application = ProtocolTypeRouter({
     'http': django_asgi_app,
     'websocket' : AllowedHostsOriginValidator(AuthMiddlewareStack(URLRouter(ws_urlpatterns))),
-    'channel' : ChannelNameRouter(
-        {
-            'test':consumers.Test.as_asgi(),
-            
-        }
-
-    )
 })
