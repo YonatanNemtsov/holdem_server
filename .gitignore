@@ -6,4 +6,4 @@ __pycache__
 deuces
 key.txt
 static/cards/
-holdem_core/*
+holdem_core/

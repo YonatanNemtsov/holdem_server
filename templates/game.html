@@ -13,6 +13,7 @@
     <header>
         Hi {{player}}!
         Your Balance: {{balance}}$
+        <button type="button" value="leave-table" id="leave-table"> Sit up </button>
     </header>
     <div id="game-table">
         <div class="table-sits-top">
@@ -162,6 +163,8 @@
                 <button type="submit"> raise</button>
             </div>
         </div>
+
+        
     </footer>
     <div>
     {{ sits|json_script:"sits" }}
@@ -194,7 +197,7 @@
             console.log(data);
             switch (data.type){
                 // might be a good idea to put different cases in seperate functions and call them. -Like was done in table_state.
-                case 'table_state':
+                case 'table_view_update':
                     update_table(data);
                     // Recreate table
                     break;
@@ -206,6 +209,8 @@
 
         function update_table(data){
             //document.querySelector('#community_cards').innerText = 'shared cards:' + (data.message.community_cards);
+            
+            /*
             document.getElementById('community_cards').innerHTML='';
             data.message.community_cards.forEach(card => {
                 let cardImage = document.createElement('img');
@@ -217,10 +222,12 @@
                 document.getElementById('community_cards').appendChild(cardImage);
 
             });
-            document.querySelector('#log').innerText = '';
+            */
 
+            document.querySelector('#log').innerText = '';
             for (let sit = 1; sit < 10; sit++) {
-                    document.querySelector('#player-' + sit + ' .player-name').innerText = '';
+                    
+                    //document.querySelector('#player-' + sit + ' .player-name').innerText = '';
                     document.querySelector('#player-' + sit + ' .chips').innerText = '';
                     document.querySelector('#player-' + sit + ' .card1').src = '';
                     document.querySelector('#player-' + sit + ' .card2').src = '';
@@ -230,31 +237,37 @@
                 }
             
             
-            Object.keys(data.message.players).forEach(sit => {
-                document.querySelector('#player-' + sit + ' .player-name').innerText = (data.message.players[sit]['username']);
-                document.querySelector('#player-' + sit + ' .chips').innerText = (data.message.players[sit]['chips']);
-                document.querySelector('#player-' + sit + ' .card1').src = '/static/cards/x.png';
-                document.querySelector('#player-' + sit + ' .card2').src = '/static/cards/x.png';
-                document.querySelector('#player-' + sit + ' .card1').alt = 'x';
-                document.querySelector('#player-' + sit + ' .card2').alt = 'x';
-                document.querySelector('#player-' + sit + ' .last-move').innerText = '';
-                if (data.message.has_folded[sit]) {
-                    document.querySelector('#player-' + sit + ' .has-folded').innerText = 'folded';
-                }
+            data.players.forEach(player_data => {
+                
+                //document.querySelector('#player-' + sit + ' .player-name').innerText = (data.message.players[sit]['username']);
+                document.querySelector('#player-' + player_data['sit'] + ' .chips').innerText = (player_data['chips']);
+                document.querySelector('#player-' + player_data['sit'] + ' .card1').src = '/static/cards/x.png';
+                document.querySelector('#player-' + player_data['sit'] + ' .card2').src = '/static/cards/x.png';
+                document.querySelector('#player-' + player_data['sit'] + ' .card1').alt = 'x';
+                document.querySelector('#player-' + player_data['sit'] + ' .card2').alt = 'x';
+                document.querySelector('#player-' + player_data['sit'] + ' .last-move').innerText = '';
+                //if (data.message.has_folded[sit]) {
+                //    document.querySelector('#player-' + sit + ' .has-folded').innerText = 'folded';
+                //}
                 
             });
 
+            /*
             Object.keys(data.message.last_moves).forEach(sit => {
                 document.querySelector('#player-' + sit + ' .last-move').innerText = data.message.last_moves[sit][0];
                 if (data.message.last_moves[sit][1]>0) {
                     document.querySelector('#player-' + sit + ' .last-move').innerText += ' ' + data.message.last_moves[sit][1];
                 }
             })
+            */
 
+            /*
             document.querySelector(('#player-'+data.message.sit+' .card1')).src = '/static/cards/'+data.message.card[0]+'.png';
             document.querySelector(('#player-'+data.message.sit+' .card2')).src = '/static/cards/'+data.message.card[1]+'.png';
             document.querySelector('#player-' + data.message.sit + ' .card1').alt = data.message.card[0];
             document.querySelector('#player-' + data.message.sit + ' .card2').alt = data.message.card[1];
+
+            */
 
             let states = {
                 "0":"Hand ended",
@@ -263,6 +276,7 @@
                 "3":"Turn",
                 "4":"River",
             };
+            
             document.querySelector('#table_state').innerText = 'stage: ' + states[data.message.table_state];
             document.querySelector('#turn').innerText = data.message.players[(data.message.turn)]['username'] + "'s" + ' turn.';
             let pot_keys = Object.keys(data.message.pots);
@@ -307,8 +321,8 @@
             const amount = document.querySelector('#raise input').value;
             console.log(amount);
             gameSocket.send(JSON.stringify({
-                'type':'game_request',
-                'message':{
+                'type':'move_request',
+                'data':{
                     'action':'raise',
                     'amount':amount,
                 }
@@ -318,8 +332,8 @@
         const foldRequestDom = document.querySelector('#fold');
         foldRequestDom.onclick = function() {
             gameSocket.send(JSON.stringify({
-                'type':'game_request',
-                'message':{
+                'type':'move_request',
+                'data':{
                     'action':'fold'
                 }
             }));
@@ -328,8 +342,8 @@
         const callRequestDom = document.querySelector('#call');
         callRequestDom.onclick = function() {
             gameSocket.send(JSON.stringify({
-                'type':'game_request',
-                'message':{
+                'type':'move_request',
+                'data':{
                     'action':'call'
                 }
             }));
@@ -339,7 +353,7 @@
         startRoundRequestDom.onclick = function() {
             gameSocket.send(JSON.stringify({
                 'type':'start_hand_request',
-                'message':{
+                'data':{
                     'action':'start_hand'
                 }
             }));
@@ -348,26 +362,38 @@
         const checkRequestDom = document.querySelector('#check');
         checkRequestDom.onclick = function() {
             gameSocket.send(JSON.stringify({
-                'type':'game_request',
-                'message':{
+                'type':'move_request',
+                'data':{
                     'action':'check'
                 }
             }));
         }
 
-        // requests to sit at table or leave table
+        // requests to sit at table
 
         for (let sit = 1; sit < 10; sit++) {
             let sitButton = document.querySelector('#player-' + sit + ' .sit');
             sitButton.onclick = function() {
                 gameSocket.send(JSON.stringify({
                     'type':'sit_request',
-                    'player':playerName,
-                    'sit':sit,
-                    'amount':110,
+                    'data': {
+                        'type':'join',
+                        'sit':sit,
+                        'chips':110,
+                    }
                 }));
             };
         };
+
+        const leaveTableButtonDom = document.querySelector('#leave-table');
+        leaveTableButtonDom.onclick = function() {
+            gameSocket.send(JSON.stringify({
+                'type':'sit_request',
+                'data':{
+                    'type':'leave'
+                }
+            }));
+        }
 
     </script>
     

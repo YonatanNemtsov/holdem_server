@@ -18,8 +18,9 @@ class GameTable(models.Model):
             'max_buyin': 500,
             'num_of_sits': 9,
         }
+    
     table_name = models.CharField(max_length=100, default='table')
+    
     config = models.JSONField(
         default = default_config
     )
-    
