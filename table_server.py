@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from holdem_core.core_game.holdem_table import HoldemTable,HoldemTableConfig,HoldemTablePlayer
+from holdem_core.core_game.holdem_round import HoldemRoundStage
 import asyncio
 from websockets.server import serve
 import json
@@ -15,6 +16,7 @@ class TableServerManager:
     def __init__(self):
         self.tables: dict[int, HoldemTable] = dict()
         self.connections = dict() # user_id: connection
+    
     async def add_table(self, table_id: int, config: dict):
         conf = HoldemTableConfig(**config)
         self.tables[table_id] = HoldemTable(table_id, conf)
@@ -33,7 +35,7 @@ class TableManager:
     It manages its state, and handles player requests.
     """
     def __init__(self) -> None:
-        self.table = HoldemTable(1,HoldemTableConfig(10,0,100,1000,9))
+        self.table = HoldemTable(1,HoldemTableConfig(1,0,100,1000,9))
         self.connections = dict() # websocket connections, keys are user_id's
 
     async def run_table(self):
@@ -42,6 +44,27 @@ class TableManager:
             if self.table.round == None and len(self.table.players) > 1:
                 self.table.start_new_round()
                 self.table.round.start()
+                for user_id in self.connections:
+                    table_view = await self.get_table_view(self.table.table_id, user_id)
+                    await self.connections[user_id].send(json.dumps(table_view))
+            
+            elif self.table.round != None:
+                if self.table.round.stage == HoldemRoundStage.ENDED:
+                    self.table.start_new_round()
+                    self.table.round.start()
+                    for user_id in self.connections:
+                        table_view = await self.get_table_view(self.table.table_id, user_id)
+                        await self.connections[user_id].send(json.dumps(table_view))
+                
+                if self.table.round.stage in [HoldemRoundStage.SHOWDOWN, HoldemRoundStage.NO_SHOWDOWN]:
+                    self.table.round.make_pots()
+                    self.table.round.determine_pots_winners()
+                    print('winners: ', self.table.round.winners)
+                    self.table.round.distribute_pots()
+                    self.table.round.start_next_move()
+                    for user_id in self.connections:
+                        table_view = await self.get_table_view(self.table.table_id, user_id)
+                        await self.connections[user_id].send(json.dumps(table_view))
     
     # TODO: implement refactoring
     # Request sub handlers
@@ -68,7 +91,14 @@ class TableManager:
         
         req = request.copy()
         req['data'].update({'sit':self.table.get_player_by_id(req['data']['user_id']).sit})
-        return self.table.request_handler(request)
+        response = self.table.request_handler(request)
+        print(response)
+        if response['success'] == True:
+            if len(self.table.round.move_queue) == 0:
+                self.table.round.make_pots()
+            self.table.round.start_next_move()
+        
+        return response
     
     async def _handle_connection_request(self, request: dict, websocket) -> dict:
         # save connection in self.connections
@@ -108,7 +138,17 @@ class TableManager:
         assert request['type'] in HANDLE.keys()
 
         response = await HANDLE[request['type']](request, websocket)
+
+        if response['success'] == False:
+            return json.dumps(response)
+        
+        for user_id in self.connections:
+            table_view = await table_manager.get_table_view(table_manager.table.table_id, user_id)
+            await table_manager.connections[user_id].send(json.dumps(table_view))
+
+
         return json.dumps(response)
+    
 
     async def add_connection(self, websocket, user_id: int) -> None:
         if user_id in self.connections:
@@ -136,6 +176,7 @@ async def table_server(websocket, path):
         print(message)
         response = await table_manager.handle_request(message, websocket)
         await websocket.send(response)
+
         for user_id in table_manager.connections:
             table_view = await table_manager.get_table_view(table_manager.table.table_id, user_id)
             await table_manager.connections[user_id].send(json.dumps(table_view))

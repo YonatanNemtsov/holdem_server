@@ -208,11 +208,12 @@
         };
 
         function update_table(data){
-            //document.querySelector('#community_cards').innerText = 'shared cards:' + (data.message.community_cards);
-            
-            /*
+            //document.querySelector('#community_cards').innerText = 'shared cards:' + (data.data.shared_data.community_cards);
+            const allowed_moves = JSON.stringify(data.data.personal_data.allowed_moves);
+            sessionStorage.setItem('allowed_moves', allowed_moves);
+
             document.getElementById('community_cards').innerHTML='';
-            data.message.community_cards.forEach(card => {
+            data.data.shared_data.community_cards.forEach(card => {
                 let cardImage = document.createElement('img');
                 cardImage.src = '/static/cards/'+card+'.png';
                 cardImage.width = 60;
@@ -222,7 +223,7 @@
                 document.getElementById('community_cards').appendChild(cardImage);
 
             });
-            */
+            
 
             document.querySelector('#log').innerText = '';
             for (let sit = 1; sit < 10; sit++) {
@@ -237,8 +238,8 @@
                 }
             
             
-            data.players.forEach(player_data => {
-                
+            data.data.shared_data.players.forEach(player_data => {
+                if (player_data.in_hand == false) return;
                 //document.querySelector('#player-' + sit + ' .player-name').innerText = (data.message.players[sit]['username']);
                 document.querySelector('#player-' + player_data['sit'] + ' .chips').innerText = (player_data['chips']);
                 document.querySelector('#player-' + player_data['sit'] + ' .card1').src = '/static/cards/x.png';
@@ -252,39 +253,20 @@
                 
             });
 
-            /*
-            Object.keys(data.message.last_moves).forEach(sit => {
-                document.querySelector('#player-' + sit + ' .last-move').innerText = data.message.last_moves[sit][0];
-                if (data.message.last_moves[sit][1]>0) {
-                    document.querySelector('#player-' + sit + ' .last-move').innerText += ' ' + data.message.last_moves[sit][1];
+            document.querySelector('#player-' + data.data.personal_data['sit'] + ' .card1').src = '/static/cards/'+ data.data.personal_data.cards[0]+'.png';
+            document.querySelector('#player-' + data.data.personal_data['sit'] + ' .card2').src = '/static/cards/'+data.data.personal_data.cards[1]+'.png';
+
+            
+            Object.keys(data.data.shared_data.last_moves).forEach(sit => {
+                document.querySelector('#player-' + sit + ' .last-move').innerText = data.data.shared_data.last_moves[sit]['action'];
+                if (['raise', 'call'].includes(data.data.shared_data.last_moves[sit]['action'])) {
+                    document.querySelector('#player-' + sit + ' .last-move').innerText += ' ' + (Number(data.data.shared_data.last_moves[sit]['call_amount']) + Number(data.data.shared_data.last_moves[sit]['raise_amount']));
                 }
             })
-            */
-
-            /*
-            document.querySelector(('#player-'+data.message.sit+' .card1')).src = '/static/cards/'+data.message.card[0]+'.png';
-            document.querySelector(('#player-'+data.message.sit+' .card2')).src = '/static/cards/'+data.message.card[1]+'.png';
-            document.querySelector('#player-' + data.message.sit + ' .card1').alt = data.message.card[0];
-            document.querySelector('#player-' + data.message.sit + ' .card2').alt = data.message.card[1];
-
-            */
-
-            let states = {
-                "0":"Hand ended",
-                "1":"Preflop",
-                "2":"Flop",
-                "3":"Turn",
-                "4":"River",
-            };
             
-            document.querySelector('#table_state').innerText = 'stage: ' + states[data.message.table_state];
-            document.querySelector('#turn').innerText = data.message.players[(data.message.turn)]['username'] + "'s" + ' turn.';
-            let pot_keys = Object.keys(data.message.pots);
-            let pots = new Array()
-            console.log(pot_keys);
-            pot_keys.forEach(key => {
-                pots.push(data.message.pots[key]['pot']);
-            });
+            document.querySelector('#table_state').innerText = 'stage: ' + data.data.shared_data.stage;
+            document.querySelector('#turn').innerText = data.data.shared_data.to_move+ "'s" + ' turn.';
+            let pots = data.data.shared_data.pots;
             document.querySelector('#pots').innerText = pots.join(" ");
             
             Object.keys(data.message.show_cards).forEach(sit => {
@@ -318,13 +300,18 @@
 
         const raiseRequestDom = document.querySelector('#raise button');
         raiseRequestDom.onclick = function() {
-            const amount = document.querySelector('#raise input').value;
-            console.log(amount);
+            const total_bet_amount = Number(document.querySelector('#raise input').value);
+            const allowed_moves = JSON.parse(sessionStorage.getItem('allowed_moves'));
+
+            const call_amount = Math.min(allowed_moves['call_amount'], total_bet_amount);
+            const raise_amount = total_bet_amount - call_amount;
+            console.log(call_amount)
             gameSocket.send(JSON.stringify({
                 'type':'move_request',
                 'data':{
                     'action':'raise',
-                    'amount':amount,
+                    'call_amount':call_amount,
+                    'raise_amount':raise_amount,
                 }
             }));
         }
@@ -341,10 +328,14 @@
 
         const callRequestDom = document.querySelector('#call');
         callRequestDom.onclick = function() {
+            const allowed_moves = JSON.parse(sessionStorage.getItem('allowed_moves'));
+            const call_amount = allowed_moves['call_amount'];
             gameSocket.send(JSON.stringify({
                 'type':'move_request',
                 'data':{
-                    'action':'call'
+                    'action':'call',
+                    'call_amount': call_amount,
+                    'raise_amount': 0
                 }
             }));
         }
@@ -384,7 +375,6 @@
                 }));
             };
         };
-
         const leaveTableButtonDom = document.querySelector('#leave-table');
         leaveTableButtonDom.onclick = function() {
             gameSocket.send(JSON.stringify({
