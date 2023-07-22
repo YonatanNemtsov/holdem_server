@@ -17,30 +17,30 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
         self.table_id = int(self.scope['url_route']['kwargs']['table_id'])
         self.user = self.scope['user']
-        print(self.user.id, self.user.username, self.user)
         try:
             table = await self.get_db_table_by_id(self.table_id)
             self.table_config = table.config.copy()
         except:
             await self.close()
             return
-        print(self.table_config)
-        await self.connect_to_table()
-        asyncio.create_task(self.beggin_recv())
+        await self.connect_to_table(self.table_id)
+        self.recv_task = asyncio.create_task(self.beggin_recv())
         await self.accept()
         return
     
     #TODO: write the function.
-    async def connect_to_table(self):
-        self.table_connection: websockets.client.ClientConnection = await websockets.client.connect("ws://localhost:8765/table")
-        await self.table_connection.send(json.dumps({'type':'connection_request','data': {'user_id':self.user.id}}))
+    async def connect_to_table(self, table_id):
+        self.table_connection: websockets.client.ClientConnection = await websockets.client.connect(f"ws://localhost:8765/table/{table_id}")
+        await self.table_connection.send(json.dumps({'type':'connection_request','data': {'user_id':self.user.id, 'table_id':table_id}}))
         
     async def beggin_recv(self):
         """ Recieving updates and responses from table server """
-        while True:
-            message = await self.table_connection.recv()
-            await self.recieve_table_message(message)
-    
+        try:
+            while self.table_connection.open:
+                message = await self.table_connection.recv()
+                await self.recieve_table_message(message)
+        finally:
+            self.table_connection.close()
     async def add_table_request(self):
         await self.send_to_table_server()
     
@@ -49,7 +49,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         TABLE_MESSAGE_TYPES = ['table_view_update', 'sit_response', 'move_response']
         if type(message) == str:
             message = json.loads(message)
-        print(message)
         if message['type'] == 'table_view_update':
             await self.send_json(message)
     
@@ -83,12 +82,11 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             await self.send_to_table_server(consumer_request)
         
         if consumer_request['type'] == 'move_request':
-            print(consumer_request)
             await self.send_to_table_server(consumer_request)
-        
+    
     async def disconnect(self, code):
         await self.table_connection.close()
-        return await self.close()
+        await self.close()
     
     @database_sync_to_async
     def get_db_table_by_id(self, table_id: str) -> GameTable:
