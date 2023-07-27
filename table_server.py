@@ -1,4 +1,5 @@
 import asyncio
+import json
 from websockets.server import serve
 from table_manager import TableManager, TableServerManager
 
@@ -16,7 +17,12 @@ table_server_manager.add_table(2, config)
 
 async def table_server(websocket, path):
     async for message in websocket:
+
         response = await table_server_manager.handle_request(message, websocket)
+        if json.loads(message)['type'] == 'db_connection_request':
+            pass
+            #await websocket.send(response)
+        
         await websocket.send(response)
 
 async def server():

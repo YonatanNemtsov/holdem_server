@@ -1,8 +1,6 @@
-from random import shuffle, randint
 import asyncio
 import websockets.client
 import json
-from dataclasses import dataclass, field
 
 from channels.generic.websocket import AsyncJsonWebsocketConsumer, AsyncConsumer
 from channels.db import database_sync_to_async
@@ -23,11 +21,12 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         except:
             await self.close()
             return
+        
         await self.connect_to_table(self.table_id)
         self.recv_task = asyncio.create_task(self.beggin_recv())
         await self.accept()
         return
-    
+
     #TODO: write the function.
     async def connect_to_table(self, table_id):
         self.table_connection: websockets.client.ClientConnection = await websockets.client.connect(f"ws://localhost:8765/table/{table_id}")
@@ -41,16 +40,25 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 await self.recieve_table_message(message)
         finally:
             self.table_connection.close()
+
     async def add_table_request(self):
         await self.send_to_table_server()
-    
+
     async def recieve_table_message(self, message):
         """recieve updates and responses from the table server"""
-        TABLE_MESSAGE_TYPES = ['table_view_update', 'sit_response', 'move_response']
+        TABLE_MESSAGE_TYPES = ['table_view_update', 'balance_update']
         if type(message) == str:
             message = json.loads(message)
+        
         if message['type'] == 'table_view_update':
             await self.send_json(message)
+
+        if message['type'] == 'balance_update':
+            # Inside a consumer
+            await self.channel_layer.send(
+                "balance_update",
+                message,
+            )
     
     async def send_to_table_server(self, consumer_request: dict):
         CONSUMER_MESSAGE_TYPES = ['sit_request', 'move_request', 'add_chips_request', 'init_table_request']
@@ -59,7 +67,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
         await self.table_connection.send(consumer_request)
     
-
     #TODO: implement sub functions. 
     async def _recieve_sit_request(self, client_request):
         pass
@@ -70,7 +77,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     async def _recieve_add_chips_request(self, client_request):
         pass
     
-
     async def receive_json(self, client_request, **kwargs):
         """ Recieving messages from the client """
         CLIENT_MESSAGE_TYPES = ['sit_request', 'move_request', 'add_chips_request']
@@ -91,6 +97,3 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def get_db_table_by_id(self, table_id: str) -> GameTable:
         return GameTable.objects.get(id=table_id)
-    
-class ChipBalanceUpdateWorker(AsyncConsumer):
-    pass
