@@ -36,7 +36,7 @@ class TableServerManager:
         return json.dumps({'type':'db_connection_response','success':True})
 
     async def handle_request(self, request: dict, websocket: 'websocket') -> dict:
-        print(request)
+        #print(request)
         request = json.loads(request)
 
         if request['type'] == 'db_connection_request':
@@ -78,6 +78,8 @@ class TableManager:
             if self.table.round == None and len(self.table.players) > 1:
                 self.table.start_new_round()
                 self.table.round.start()
+                for p in self.table.players:
+                    p.sync_chips()
                 await self.send_table_view_to_all()
             
             elif self.table.round != None:
@@ -85,7 +87,7 @@ class TableManager:
                     await asyncio.sleep(3)
                     
                     if len(self.table.players) < 2:
-
+                        # wait for more players to join
                         await self.send_table_view_to_all()
                         continue
                     
@@ -141,7 +143,15 @@ class TableManager:
                 self.table.round.make_pots()
                 #(p.sync_chips() for p in self.table.players)
                 await asyncio.sleep(1.5)
-                
+                #self.table.round.start_next_move()
+
+            elif len([p for p in self.table.round.players if not p.folded]) == 1:
+                self.table.round.start_next_move()
+                await self.send_table_view_to_all()
+                self.table.round.make_pots()
+                await asyncio.sleep(1.5)
+                #self.table.round.start_next_move()
+            
             self.table.round.start_next_move()
         
         await self.send_table_view_to_all()
@@ -196,9 +206,10 @@ class TableManager:
         return json.dumps(response)
     
     async def add_connection(self, websocket, user_id: int) -> None:
+        #print(self.connections)
         if user_id in self.connections:
-            if ws := self.connections[user_id].open:
-                ws.close()
+            if (ws := self.connections[user_id]).open:
+                await ws.close()
             
         self.connections[user_id] = websocket
     
@@ -206,7 +217,7 @@ class TableManager:
         assert user_id in self.connections
 
         if self.connections[user_id].open:
-            self.connections[user_id].close()
+            await self.connections[user_id].close()
         
         del self.connections[user_id]
 

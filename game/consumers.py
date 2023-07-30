@@ -39,7 +39,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 message = await self.table_connection.recv()
                 await self.recieve_table_message(message)
         finally:
-            self.table_connection.close()
+            await self.table_connection.close()
 
     async def add_table_request(self):
         await self.send_to_table_server()

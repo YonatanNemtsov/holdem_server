@@ -259,7 +259,7 @@
             
             Object.keys(data.data.shared_data.last_moves).forEach(sit => {
                 document.querySelector('#player-' + sit + ' .last-move').innerText = data.data.shared_data.last_moves[sit]['action'];
-                if (['raise', 'call'].includes(data.data.shared_data.last_moves[sit]['action'])) {
+                if (['raise', 'call', 'sb', 'bb'].includes(data.data.shared_data.last_moves[sit]['action'])) {
                     document.querySelector('#player-' + sit + ' .last-move').innerText += ' ' + (Number(data.data.shared_data.last_moves[sit]['call_amount']) + Number(data.data.shared_data.last_moves[sit]['raise_amount']));
                 }
             })
@@ -274,18 +274,6 @@
                 document.querySelector(('#player-'+ sit +' .card1')).src = '/static/cards/'+data.message.show_cards[sit][0]+'.png';
                 document.querySelector(('#player-'+ sit +' .card2')).src = '/static/cards/'+data.message.show_cards[sit][1]+'.png';
             });
-
-            document.querySelector('#game-messages').innerHTML = '';
-            if (data.message.table_state == 0) {
-                console.log('game ended');
-                Object.keys(data.message.winners).forEach(winner => {
-                    console.log(winner);
-                    let w = document.createElement('p');
-                    w.innerText = (data.message.players[winner]['username'] + ' wins ' + data.message.winners[winner]);
-                    document.querySelector('#game-messages').appendChild(w);
-                });
-            }
-            
 
         };
         
@@ -368,9 +356,9 @@
                 gameSocket.send(JSON.stringify({
                     'type':'sit_request',
                     'data': {
-                        'type':'join',
-                        'sit':sit,
-                        'chips':110,
+                        'type': 'join',
+                        'sit': sit,
+                        'chips': 110,
                     }
                 }));
             };
