@@ -2,6 +2,7 @@ from holdem_core.core_game.holdem_table import HoldemTable,HoldemTableConfig
 from holdem_core.core_game.holdem_round import HoldemRoundStage
 import asyncio
 import json
+import time
 
 class TableServerManager:
     """
@@ -59,6 +60,34 @@ class TableServerManager:
 
         return response
 
+class TurnTimer:
+    """ Represents the timer for each turn. When time is out, sends
+    a check/fold request to the table.
+    """
+    def __init__(self, table_manager: 'TableManager', interval: int):
+        self.table_manager = table_manager
+        self.interval = interval
+        self.player = None
+        self.start_time = None
+
+    async def make_default_request(self):
+        print(10)
+        allowed_moves = self.table_manager.table.round.get_allowed_moves(self.player.round_player)
+        
+        if 'check' in allowed_moves['moves']:
+            move = 'check'
+        else:
+            move = 'fold'
+
+        await self.table_manager.handle_request({'type': 'move_request', 'data': {'action': move, 'user_id': self.player.id, 'table_id': self.table_manager.table.table_id}}, None)
+
+    async def start(self):
+        self.player = self.table_manager.table.get_player_by_sit(self.table_manager.table.round.to_move.sit)
+        self.start_time = time.time()
+        await asyncio.sleep(self.interval)
+        if time.time() - self.start_time > self.interval:
+            await self.make_default_request()
+
 
 class TableManager:
     """
@@ -68,6 +97,8 @@ class TableManager:
     def __init__(self, table_id: str, table_config: dict) -> None:
         self.table = HoldemTable(table_id ,HoldemTableConfig(**table_config))
         self.connections = dict() # websocket connections, keys are user_id's
+        self.timer = TurnTimer(self,7)
+        self.timer_task = None
         self.running = False
 
     # TODO: Refactor and improve, add timers, add default moves, etc.
@@ -78,6 +109,7 @@ class TableManager:
             if self.table.round == None and len(self.table.players) > 1:
                 self.table.start_new_round()
                 self.table.round.start()
+                self.timer_task = asyncio.create_task(self.timer.start())
                 await self.send_table_view_to_all()
             
             elif self.table.round != None:
@@ -91,6 +123,7 @@ class TableManager:
                     
                     self.table.start_new_round()
                     self.table.round.start()
+                    self.timer_task = asyncio.create_task(self.timer.start())
                     await self.send_table_view_to_all()
                 if self.table.round.stage in [HoldemRoundStage.SHOWDOWN, HoldemRoundStage.NO_SHOWDOWN]:
                     self.table.round.make_pots()
@@ -126,6 +159,7 @@ class TableManager:
         return response
     
     async def _handle_move_request(self, request: dict, websocket) -> dict:
+        print(request)
         if self.table.round == None:
             return {'type':'move_response','success': False}
         
@@ -150,8 +184,13 @@ class TableManager:
                 #self.table.round.start_next_move()
             
             self.table.round.start_next_move()
-        
-        await self.send_table_view_to_all()
+            
+            self.timer.player = self.table.round.to_move
+            if self.timer_task != None:
+                self.timer_task.cancel()
+            self.timer_task = asyncio.create_task(self.timer.start())
+
+            await self.send_table_view_to_all()
         
         return response
     
@@ -169,7 +208,7 @@ class TableManager:
         pass
 
     async def handle_request(self, request: dict, websocket: 'websocket'):
-        
+        print(request)
         """ Handles all requests initiated by a consumer to the table server 
         requests are of the form:
 
@@ -219,7 +258,11 @@ class TableManager:
         del self.connections[user_id]
 
     async def get_table_view(self, user_id: int):
-        return self.table.get_table_view(self.table.get_player_by_id(user_id))
+        view = self.table.get_table_view(self.table.get_player_by_id(user_id))
+        if self.timer.start_time != None:
+            view['data']['shared_data']['timer'] = (t := (self.timer.start_time - time.time() + self.timer.interval))
+            print(t)
+        return view
     
     async def send_table_view_to_all(self):
         for user_id in self.connections:
