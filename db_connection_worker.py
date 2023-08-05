@@ -18,12 +18,12 @@ from game.models import UserAccount
 class BalanceUpdateWorker:
     def __init__(self):
         self.connection = None # websocket
-
+    
     async def connect_to_table_server(self):
         self.connection: websockets.client.ClientConnection = await websockets.client.connect("ws://localhost:8765/database_connection/")
         await self.connection.send(json.dumps({'type':'db_connection_request', 'data':{}}))
         #print(await self.connection.recv())
-
+    
     async def run(self):
         try:
             while True:

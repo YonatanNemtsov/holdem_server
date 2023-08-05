@@ -265,16 +265,18 @@
             })
             
             document.querySelector('#table_state').innerText = 'stage: ' + data.data.shared_data.stage;
+
             document.querySelector('#turn').innerText = data.data.shared_data.to_move+ "'s" + ' turn.';
+            
+            //document.querySelector('#player-' + data.data.shared_data.to_move + ' .player-name').innerText = 'x';
+
             let pots = data.data.shared_data.pots;
             document.querySelector('#pots').innerText = pots.join(" ");
             
-            Object.keys(data.message.show_cards).forEach(sit => {
-                console.log(data.message.show_cards[sit]);
-                document.querySelector(('#player-'+ sit +' .card1')).src = '/static/cards/'+data.message.show_cards[sit][0]+'.png';
-                document.querySelector(('#player-'+ sit +' .card2')).src = '/static/cards/'+data.message.show_cards[sit][1]+'.png';
+            Object.keys(data.data.shared_data.show_cards).forEach(sit => {
+                document.querySelector(('#player-'+ sit +' .card1')).src = '/static/cards/'+data.data.shared_data.show_cards[sit][0]+'.png';
+                document.querySelector(('#player-'+ sit +' .card2')).src = '/static/cards/'+data.data.shared_data.show_cards[sit][1]+'.png';
             });
-
         };
         
         gameSocket.onclose = function(e) {

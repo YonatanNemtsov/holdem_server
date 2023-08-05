@@ -78,8 +78,6 @@ class TableManager:
             if self.table.round == None and len(self.table.players) > 1:
                 self.table.start_new_round()
                 self.table.round.start()
-                for p in self.table.players:
-                    p.sync_chips()
                 await self.send_table_view_to_all()
             
             elif self.table.round != None:
@@ -94,7 +92,6 @@ class TableManager:
                     self.table.start_new_round()
                     self.table.round.start()
                     await self.send_table_view_to_all()
-                
                 if self.table.round.stage in [HoldemRoundStage.SHOWDOWN, HoldemRoundStage.NO_SHOWDOWN]:
                     self.table.round.make_pots()
                     self.table.round.determine_pots_winners()
