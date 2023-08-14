@@ -1,19 +1,27 @@
 import asyncio
 import json
+import os
 from websockets.server import serve
 from table_manager import TableManager, TableServerManager
 
-config = {
-    'small_blind': 2,
-    'ante': 0,
-    'min_buyin': 100,
-    'max_buyin': 500,
-    'num_of_sits': 9,
-}
+
+import django
+
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "guessing_game.settings")
+
+django.setup()
+
+from game.models import GameTable
+
+tables = GameTable.objects.all()
+
 
 table_server_manager = TableServerManager()
-table_server_manager.add_table(1, config)
-table_server_manager.add_table(2, config)
+
+
+for table in tables:
+    table_server_manager.add_table(table.id, table.config)
 
 async def table_server(websocket, path):
     async for message in websocket:

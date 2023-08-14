@@ -51,7 +51,7 @@ class BalanceUpdateWorker:
         # TODO: Make chips_in_action, in the UserAccount model a dict, 
         # with table id's as keys, for better tracking.
 
-        account = UserAccount.objects.get(id=request['data']['user_id'])
+        account = UserAccount.objects.get(user=request['data']['user_id'])
 
         sign = 1 if request['data']['action'] == 'leave' else -1
         account.balance += sign * request['data']['amount']
@@ -61,6 +61,8 @@ class BalanceUpdateWorker:
         
         account.save()
         print(account.balance, account.chips_in_action)
+
+
 
 async def main():
     worker = BalanceUpdateWorker()

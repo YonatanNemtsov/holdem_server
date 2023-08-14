@@ -15,6 +15,9 @@
         Your Balance: {{balance}}$
         <button type="button" value="leave-table" id="leave-table"> Sit up </button>
     </header>
+
+    <p id="timer"> 10</p>
+
     <div id="game-table">
         <div class="table-sits-top">
             <div id="player-1">
@@ -207,10 +210,32 @@
             }
         };
 
+
+        function updateTimer() {
+            const timerElement = document.getElementById('timer');
+            let count = parseInt(timerElement.textContent);
+
+            if (count > 0) {
+                count--;
+                timerElement.textContent = count;
+            }
+
+            else {
+                timerElement.textContent = 0;
+            }
+        }
+
+        // Initial call to update the timer display
+        setInterval(updateTimer, 1000);
+
         function update_table(data){
             //document.querySelector('#community_cards').innerText = 'shared cards:' + (data.data.shared_data.community_cards);
             const allowed_moves = JSON.stringify(data.data.personal_data.allowed_moves);
             sessionStorage.setItem('allowed_moves', allowed_moves);
+
+            timer = Math.round(data.data.shared_data.timer);
+            const timerElement = document.getElementById('timer');
+            timerElement.textContent = timer
 
             document.getElementById('community_cards').innerHTML='';
             data.data.shared_data.community_cards.forEach(card => {

@@ -13,3 +13,17 @@ header {
     height: 20vh;
     flex: 1;
   }
+
+#tables {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+.table-box {
+    width: calc(33.33% - 2px); /* Adjust the width as needed */
+    background-color: #f0f0f0;
+    padding: 20px;
+    border: 1px solid #ccc;
+    text-align: center;
+    box-sizing: border-box;
+}

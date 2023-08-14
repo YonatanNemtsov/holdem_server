@@ -19,6 +19,7 @@ class TableServerManager:
     def add_table(self, table_id: int, config: dict):
         #TODO: check if table exists, validate, etc.
         self.tables[table_id] = TableManager(table_id, config)
+        self.tables[table_id].server_manager = self
     
     async def run_tables(self):
         while True:
@@ -26,7 +27,7 @@ class TableServerManager:
                 if not table.running:
                     asyncio.create_task(table.run_table())
             await asyncio.sleep(5)
-
+    
     #TODO: implement
     async def graceful_shutdown(self):
         pass
@@ -35,10 +36,11 @@ class TableServerManager:
         self.db_connection = websocket
         print('Database connected')
         return json.dumps({'type':'db_connection_response','success':True})
-
+    
     async def handle_request(self, request: dict, websocket: 'websocket') -> dict:
-        #print(request)
-        request = json.loads(request)
+
+        if type(request) == str:
+            request = json.loads(request)
 
         if request['type'] == 'db_connection_request':
             return (await self.handle_db_conection_request(request, websocket))
@@ -71,7 +73,6 @@ class TurnTimer:
         self.start_time = None
 
     async def make_default_request(self):
-        print(10)
         allowed_moves = self.table_manager.table.round.get_allowed_moves(self.player.round_player)
         
         if 'check' in allowed_moves['moves']:
@@ -81,12 +82,16 @@ class TurnTimer:
 
         await self.table_manager.handle_request({'type': 'move_request', 'data': {'action': move, 'user_id': self.player.id, 'table_id': self.table_manager.table.table_id}}, None)
 
-    async def start(self):
-        self.player = self.table_manager.table.get_player_by_sit(self.table_manager.table.round.to_move.sit)
-        self.start_time = time.time()
+    async def _wait_for_action(self):
         await asyncio.sleep(self.interval)
         if time.time() - self.start_time > self.interval:
             await self.make_default_request()
+
+    async def start(self):
+        self.player = self.table_manager.table.get_player_by_sit(self.table_manager.table.round.to_move.sit)
+        self.start_time = time.time()
+        task = asyncio.create_task(self._wait_for_action())
+        return task
 
 
 class TableManager:
@@ -99,38 +104,47 @@ class TableManager:
         self.connections = dict() # websocket connections, keys are user_id's
         self.timer = TurnTimer(self,7)
         self.timer_task = None
+        self.server_manager = None
         self.running = False
+
+
+    
 
     # TODO: Refactor and improve, add timers, add default moves, etc.
     async def run_table(self):
         self.running = True
         while True:
+
             await asyncio.sleep(0.5)
-            if self.table.round == None and len(self.table.players) > 1:
+
+            if self.table.round == None and len([p for p in self.table.players if p.chips>0]) > 1:
                 self.table.start_new_round()
                 self.table.round.start()
-                self.timer_task = asyncio.create_task(self.timer.start())
+                self.timer_task = await self.timer.start()
                 await self.send_table_view_to_all()
             
             elif self.table.round != None:
                 if self.table.round.stage == HoldemRoundStage.ENDED:
+                    await self.remove_all_players_with_0_chips()
+                    
                     await asyncio.sleep(3)
                     
-                    if len(self.table.players) < 2:
+                    if len([p for p in self.table.players if p.chips>0]) < 2:
                         # wait for more players to join
                         await self.send_table_view_to_all()
                         continue
-                    
-                    self.table.start_new_round()
-                    self.table.round.start()
-                    self.timer_task = asyncio.create_task(self.timer.start())
-                    await self.send_table_view_to_all()
+                    else:
+                        self.table.start_new_round()
+                        self.table.round.start()
+                        self.timer_task = await self.timer.start()
+                        await self.send_table_view_to_all()
                 if self.table.round.stage in [HoldemRoundStage.SHOWDOWN, HoldemRoundStage.NO_SHOWDOWN]:
+                    self.timer_task.cancel()
                     self.table.round.make_pots()
                     self.table.round.determine_pots_winners()
                     self.table.round.distribute_pots()
                     #(p.sync_chips() for p in self.table.players)
-                    await asyncio.sleep(2)
+                    await asyncio.sleep(4)
                     await self.send_table_view_to_all()
                     self.table.round.start_next_move()
                     await self.send_table_view_to_all()
@@ -138,6 +152,27 @@ class TableManager:
     #TODO: Implement
     async def graceful_shutdown(self):
         pass
+
+    async def remove_player_with_0_chips(self, player_id):
+        player = self.table.get_player_by_id(player_id)
+        leave_request = {
+            'type': 'sit_request',
+            'data':{
+                'user_id':player_id,
+                'table_id':self.table.table_id,
+                'type':'leave',
+                'sit':player.sit,
+
+            }
+        }
+
+        await self.server_manager.handle_request(leave_request,None)
+    
+    async def remove_all_players_with_0_chips(self):
+        for p in self.table.players: 
+            p.sync_chips()
+            if p.chips == 0:
+                await self.remove_player_with_0_chips(p.id)
     
     # TODO: implement refactoring
     # Request sub handlers
@@ -159,7 +194,6 @@ class TableManager:
         return response
     
     async def _handle_move_request(self, request: dict, websocket) -> dict:
-        print(request)
         if self.table.round == None:
             return {'type':'move_response','success': False}
         
@@ -188,8 +222,7 @@ class TableManager:
             self.timer.player = self.table.round.to_move
             if self.timer_task != None:
                 self.timer_task.cancel()
-            self.timer_task = asyncio.create_task(self.timer.start())
-
+            self.timer_task = await self.timer.start()
             await self.send_table_view_to_all()
         
         return response
@@ -208,7 +241,6 @@ class TableManager:
         pass
 
     async def handle_request(self, request: dict, websocket: 'websocket'):
-        print(request)
         """ Handles all requests initiated by a consumer to the table server 
         requests are of the form:
 
@@ -242,7 +274,6 @@ class TableManager:
         return json.dumps(response)
     
     async def add_connection(self, websocket, user_id: int) -> None:
-        #print(self.connections)
         if user_id in self.connections:
             if (ws := self.connections[user_id]).open:
                 await ws.close()
@@ -260,8 +291,7 @@ class TableManager:
     async def get_table_view(self, user_id: int):
         view = self.table.get_table_view(self.table.get_player_by_id(user_id))
         if self.timer.start_time != None:
-            view['data']['shared_data']['timer'] = (t := (self.timer.start_time - time.time() + self.timer.interval))
-            print(t)
+            view['data']['shared_data']['timer'] = (t := (-time.time() + self.timer.start_time + self.timer.interval))
         return view
     
     async def send_table_view_to_all(self):

@@ -13,7 +13,13 @@
 <br>
 <div id="tables">
     {% for table in tables %}
-    <a href="/game/{{table.id}}/"> {{table.name}} </a><br>
+
+    <a href="/game/{{table.id}}/" class="table-box">
+        
+        {{table.name}} <br>
+
+        blinds: {{table.small_blind}} / {{table.big_blind}}
+    </a><br>
     {% endfor %}
 </div>
 {% else %}
