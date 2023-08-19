@@ -142,6 +142,7 @@ class TableManager:
                     self.timer_task.cancel()
                     self.table.round.make_pots()
                     self.table.round.determine_pots_winners()
+                    await self.send_table_view_to_all()
                     self.table.round.distribute_pots()
                     #(p.sync_chips() for p in self.table.players)
                     await asyncio.sleep(4)
@@ -190,7 +191,8 @@ class TableManager:
         
         elif request['data']['type'] == 'join':
             response = self.table.process_sit_request(request['data'])
-
+        
+        await self.send_table_view_to_all()
         return response
     
     async def _handle_move_request(self, request: dict, websocket) -> dict:

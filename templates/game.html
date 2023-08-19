@@ -14,9 +14,13 @@
         Hi {{player}}!
         Your Balance: {{balance}}$
         <button type="button" value="leave-table" id="leave-table"> Sit up </button>
+
+        <a href="/"> back to lobby</a>
+
+        buyin for this table: {{ buyin }}$
     </header>
 
-    <p id="timer"> 10</p>
+    
 
     <div id="game-table">
         <div class="table-sits-top">
@@ -78,9 +82,8 @@
             <div id="log"> Loading Game... </div>
             <div id="game-messages"> </div>
             <div class="messages">
-                <div id="pots"></div>
-                <div id="turn"></div>
-                <div id="table_state"></div>
+                <div id="pots"> <p></p> </div>
+                <p id="winners"></p>
             </div>
 
             <div id="community_cards"></div>
@@ -159,7 +162,6 @@
             <button type="button" value="fold" id="fold"> Fold </button>
             <button type="button" value="call" id="call"> Call </button>
             <button type="button" value="check" id="check"> Check </button>
-            <button type="button" value="start_round" id="start_round"> Start Round</button>
             
             <div id="raise">
                 <input type="number">
@@ -167,151 +169,229 @@
             </div>
         </div>
 
-        
+        <div id="game-messages-2">
+            <div id="game-stage"></div>
+        </div>
     </footer>
     <div>
-    {{ sits|json_script:"sits" }}
-    {{ table_id|json_script:"table-id" }}
-    {{ player.username|json_script:"user" }}
-    {% if player == p1 %}
-    {{ 1|json_script:"sit-number" }}
-    {% endif %}
-    {% if player == p2 %}
-    {{ 2|json_script:"sit-number" }}
-    {% endif %}
+        {{ sits|json_script:"sits" }}
+        {{ table_id|json_script:"table-id" }}
+        {{ player.username|json_script:"user" }}
+        {% if player == p1 %}
+        {{ 1|json_script:"sit-number" }}
+        {% endif %}
+        {{ buyin|json_script:"buyin" }}
     </div>
-
+    
     <script>
         const tableName = JSON.parse(document.getElementById('table-id').textContent);
         /*const sitNumber = JSON.parse(document.getElementById('sit-number').textContent);*/
         const playerName = JSON.parse(document.getElementById('user').textContent);
-
+        
         const gameSocket = new WebSocket(
             'ws://'
             + window.location.host
             + '/ws/game/'
             + tableName
             +'/'
-        );
-        
-        // recieving messages over websocket
+            );
+            
+            // recieving messages over websocket
         gameSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            console.log(data);
             switch (data.type){
-                // might be a good idea to put different cases in seperate functions and call them. -Like was done in table_state.
+                // might be a good idea to put different cases in seperate functions and call them. -Like was done in game-stage.
                 case 'table_view_update':
                     update_table(data);
                     // Recreate table
                     break;
-
+                case 'sit_response':
+                    alert(String(data.message));
+                    break;
                 default:
                     break;
             }
         };
-
-
+                
+                
         function updateTimer() {
-            const timerElement = document.getElementById('timer');
-            let count = parseInt(timerElement.textContent);
-
-            if (count > 0) {
-                count--;
-                timerElement.textContent = count;
+            timer = document.getElementById('turn-indicator');
+            if (timer===null) return;
+            count = timer.innerText;
+            if (Number(count) > 0){
+                count -= 1;
+                timer.innerText = count;
             }
-
-            else {
-                timerElement.textContent = 0;
-            }
+            else {timer.innerText = '';}
+            
         }
-
+                
         // Initial call to update the timer display
         setInterval(updateTimer, 1000);
+        
+        function get_player_by_sit(players, sit){
+            players.forEach(player=> {
+                if (player.sit === sit){
+                    return player;
+                }
+            }
+            );
 
+        }
+        //TODO: refactor.
         function update_table(data){
             //document.querySelector('#community_cards').innerText = 'shared cards:' + (data.data.shared_data.community_cards);
-            const allowed_moves = JSON.stringify(data.data.personal_data.allowed_moves);
-            sessionStorage.setItem('allowed_moves', allowed_moves);
+            document.querySelector('#log').innerText = '';
+            
+            if (data.data.shared_data.stage != 'showdown') {
+                document.querySelector('#winners').textContent = '';
+            }
 
-            timer = Math.round(data.data.shared_data.timer);
-            const timerElement = document.getElementById('timer');
-            timerElement.textContent = timer
-
+            for (let sit = 1; sit < 10; sit++) {
+                
+                document.querySelector('#player-' + sit + ' .chips').innerText = '';
+                document.querySelector('#player-' + sit + ' .player-name').innerText = '';
+                document.querySelector('#player-' + sit + ' .card1').src = '';
+                document.querySelector('#player-' + sit + ' .card2').src = '';
+                document.querySelector('#player-' + sit + ' .card1').alt = '';
+                document.querySelector('#player-' + sit + ' .card2').alt = '';
+                document.querySelector('#player-' + sit + ' .has-folded').innerText = '';
+            }
+            
             document.getElementById('community_cards').innerHTML='';
-            data.data.shared_data.community_cards.forEach(card => {
-                let cardImage = document.createElement('img');
-                cardImage.src = '/static/cards/'+card+'.png';
-                cardImage.width = 60;
-                cardImage.height = 87;
-                cardImage.alt = card;
-                cardImage.setAttribute("class", "community-card");
-                document.getElementById('community_cards').appendChild(cardImage);
+            
+            timer = Math.round(data.data.shared_data.timer);
+            to_move = data.data.shared_data.to_move;
+
+            data.data.shared_data.players.forEach(player_data => {
+                document.querySelector('#player-' + player_data['sit'] + ' .chips').innerText = (player_data['chips']);
+                document.querySelector('#player-' + player_data['sit'] + ' .player-name').innerText = (player_data['player_name']);
 
             });
             
-
-            document.querySelector('#log').innerText = '';
-            for (let sit = 1; sit < 10; sit++) {
+            if (['ended','not_started'].includes(data.data.shared_data.stage) === false) {
+                data.data.shared_data.community_cards.forEach(card => {
+                    let cardImage = document.createElement('img');
+                    cardImage.src = '/static/cards/'+card+'.png';
+                    cardImage.width = 60;
+                    cardImage.height = 87;
+                    cardImage.alt = card;
+                    cardImage.setAttribute("class", "community-card");
+                    document.getElementById('community_cards').appendChild(cardImage);
                     
-                    //document.querySelector('#player-' + sit + ' .player-name').innerText = '';
-                    document.querySelector('#player-' + sit + ' .chips').innerText = '';
-                    document.querySelector('#player-' + sit + ' .card1').src = '';
-                    document.querySelector('#player-' + sit + ' .card2').src = '';
-                    document.querySelector('#player-' + sit + ' .card1').alt = '';
-                    document.querySelector('#player-' + sit + ' .card2').alt = '';
-                    document.querySelector('#player-' + sit + ' .has-folded').innerText = '';
-                }
+                });
+            }
+            
             
             
             data.data.shared_data.players.forEach(player_data => {
                 if (player_data.in_hand == false) return;
                 //document.querySelector('#player-' + sit + ' .player-name').innerText = (data.message.players[sit]['username']);
-                document.querySelector('#player-' + player_data['sit'] + ' .chips').innerText = (player_data['chips']);
+                if (['ended','not_started'].includes(data.data.shared_data.stage)) return;
                 document.querySelector('#player-' + player_data['sit'] + ' .card1').src = '/static/cards/x.png';
                 document.querySelector('#player-' + player_data['sit'] + ' .card2').src = '/static/cards/x.png';
                 document.querySelector('#player-' + player_data['sit'] + ' .card1').alt = 'x';
                 document.querySelector('#player-' + player_data['sit'] + ' .card2').alt = 'x';
                 document.querySelector('#player-' + player_data['sit'] + ' .last-move').innerText = '';
-                //if (data.message.has_folded[sit]) {
-                //    document.querySelector('#player-' + sit + ' .has-folded').innerText = 'folded';
                 //}
-                
+                //if (data.message.has_folded[sit]) {
+                    //    document.querySelector('#player-' + sit + ' .has-folded').innerText = 'folded';
+                    //}
+                    
             });
-
-            document.querySelector('#player-' + data.data.personal_data['sit'] + ' .card1').src = '/static/cards/'+ data.data.personal_data.cards[0]+'.png';
-            document.querySelector('#player-' + data.data.personal_data['sit'] + ' .card2').src = '/static/cards/'+data.data.personal_data.cards[1]+'.png';
-
+            
             
             Object.keys(data.data.shared_data.last_moves).forEach(sit => {
                 document.querySelector('#player-' + sit + ' .last-move').innerText = data.data.shared_data.last_moves[sit]['action'];
                 if (['raise', 'call', 'sb', 'bb'].includes(data.data.shared_data.last_moves[sit]['action'])) {
-                    document.querySelector('#player-' + sit + ' .last-move').innerText += ' ' + (Number(data.data.shared_data.last_moves[sit]['call_amount']) + Number(data.data.shared_data.last_moves[sit]['raise_amount']));
+                    document.querySelector('#player-' + sit + ' .last-move').innerText += ' ' + (Number(data.data.shared_data.last_moves[sit]['total_bet_amount']));
                 }
             })
             
-            document.querySelector('#table_state').innerText = 'stage: ' + data.data.shared_data.stage;
-
-            document.querySelector('#turn').innerText = data.data.shared_data.to_move+ "'s" + ' turn.';
+            //display stage of game
+            document.querySelector('#game-stage').innerText = 'stage: ' + data.data.shared_data.stage;
             
-            //document.querySelector('#player-' + data.data.shared_data.to_move + ' .player-name').innerText = 'x';
 
+            // moving the turn indicator to the right place
+            if (data.data.shared_data.to_move){
+                if(document.querySelector('#turn-indicator')) {
+                    var turnIndicator = document.querySelector('#turn-indicator');
+                }
+                else {
+                    var turnIndicator = document.createElement('div');
+                    turnIndicator.id = 'turn-indicator';
+                };
+
+                turnIndicator.innerText = Math.round(data.data.shared_data.timer);
+
+                const newParent = document.querySelector('#player-' + data.data.shared_data.to_move);
+                newParent.appendChild(turnIndicator);
+            }
+            
+            // updating pots
             let pots = data.data.shared_data.pots;
-            document.querySelector('#pots').innerText = pots.join(" ");
+            document.querySelector('#pots p').innerText = pots.join(" ");
             
+            // updating show cards
             Object.keys(data.data.shared_data.show_cards).forEach(sit => {
-                document.querySelector(('#player-'+ sit +' .card1')).src = '/static/cards/'+data.data.shared_data.show_cards[sit][0]+'.png';
-                document.querySelector(('#player-'+ sit +' .card2')).src = '/static/cards/'+data.data.shared_data.show_cards[sit][1]+'.png';
+                document.querySelector(('#player-'+ sit +' .card1')).src = '/static/cards/'+data.data.shared_data.show_cards[sit][0][0]+'.png';
+                document.querySelector(('#player-'+ sit +' .card2')).src = '/static/cards/'+data.data.shared_data.show_cards[sit][0][1]+'.png';
             });
+            
+            // updating personal data, i.e pocket cards and allowed moves
+
+            
+            if (data.data.personal_data.sit){
+                if (['ended','not_started'].includes(data.data.shared_data.stage) === false){
+                sessionStorage.setItem('allowed_moves', JSON.stringify(data.data.personal_data.allowed_moves));
+                const allowed_moves = JSON.parse(sessionStorage.getItem('allowed_moves'));
+                const raiseRequestDom = document.querySelector('#raise input');
+                
+                raiseRequestDom.setAttribute('min', String(allowed_moves.min_raise_amount + allowed_moves.call_amount));
+                raiseRequestDom.setAttribute('max', String(allowed_moves.max_raise_amount + allowed_moves.call_amount));
+                raiseRequestDom.value = allowed_moves.min_raise_amount + allowed_moves.call_amount;
+                document.querySelector('#player-' + data.data.personal_data['sit'] + ' .card1').src = '/static/cards/'+ data.data.personal_data.cards[0]+'.png';
+                document.querySelector('#player-' + data.data.personal_data['sit'] + ' .card2').src = '/static/cards/'+data.data.personal_data.cards[1]+'.png';
+                }
+            };
+
+            // displaying winners
+
+            const player_names = data.data.shared_data.player_names;
+            if (data.data.shared_data.stage === 'showdown') {
+                var winnersDom = document.querySelector('#winners');
+
+                const winners_data = data.data.shared_data.winners
+                Object.keys(winners_data).forEach(rank => {
+                    if (winners_data[rank].length > 1) {
+                        winner_names = winners_data[rank].map((sit) => {return player_names[sit]});
+                        winnersDom.textContent += winner_names.join(' ') + 'split pot';
+                    }
+                    else {
+                        winnersDom.textContent += player_names[winners_data[rank]]+' wins pot with ' + data.data.shared_data.show_cards[winners_data[rank][0]][1]; 
+                    };
+                    
+                }
+                );
+            }
+
+            if (data.data.shared_data.stage === 'no showdown'){
+                const winners_data = data.data.shared_data.winners;
+                Object.keys(winners_data).forEach(rank => {
+
+                    var winnersDom = document.querySelector('#winners');
+                    winnersDom.textContent += player_names[winners_data[rank][0]] +' wins pot';
+                });                    
+            }
+
         };
-        
+            
         gameSocket.onclose = function(e) {
             // const data = JSON.parse(e.data);
             console.error('Chat socket closed unexpectedly');
         };
-
-        // Sending requests over websocket
-
         
+        // Sending requests over websocket
 
         const raiseRequestDom = document.querySelector('#raise button');
         raiseRequestDom.onclick = function() {
@@ -320,7 +400,7 @@
 
             const call_amount = Math.min(allowed_moves['call_amount'], total_bet_amount);
             const raise_amount = total_bet_amount - call_amount;
-            console.log(call_amount)
+            console.log(call_amount);
             gameSocket.send(JSON.stringify({
                 'type':'move_request',
                 'data':{
@@ -354,16 +434,6 @@
                 }
             }));
         }
-
-        const startRoundRequestDom = document.querySelector('#start_round');
-        startRoundRequestDom.onclick = function() {
-            gameSocket.send(JSON.stringify({
-                'type':'start_hand_request',
-                'data':{
-                    'action':'start_hand'
-                }
-            }));
-        }
         
         const checkRequestDom = document.querySelector('#check');
         checkRequestDom.onclick = function() {
@@ -377,6 +447,7 @@
 
         // requests to sit at table
 
+        const buyin = Number(JSON.parse(document.getElementById('buyin').textContent));
         for (let sit = 1; sit < 10; sit++) {
             let sitButton = document.querySelector('#player-' + sit + ' .sit');
             sitButton.onclick = function() {
@@ -385,7 +456,7 @@
                     'data': {
                         'type': 'join',
                         'sit': sit,
-                        'chips': 110,
+                        'chips': buyin,
                     }
                 }));
             };

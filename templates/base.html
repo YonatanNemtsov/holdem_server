@@ -9,9 +9,9 @@
 </head>
 <body>
     <header>
-        balance: {{ balance }}
         {% if user.is_authenticated %}
         Hi {{ user.username }}!
+        balance: {{ balance }}$
         <p><a href="{% url 'logout' %}">Log Out</a></p>
         {% else %}
         <p>You are not logged in</p>

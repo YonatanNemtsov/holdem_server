@@ -16,7 +16,8 @@ def game(request,table_id):
             'table_id':table_id,
             'player':request.user,
             'sits':list(range(1,NUM_OF_SITS+1)),
-            'balance':UserAccount.objects.get(user=request.user).balance
+            'balance':UserAccount.objects.get(user=request.user).balance,
+            'buyin': table.config['min_buyin']*2,
         }
         return render(request,'game.html',context)
     else:

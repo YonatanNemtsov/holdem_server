@@ -5,9 +5,11 @@ import json
 from channels.generic.websocket import AsyncJsonWebsocketConsumer, AsyncConsumer
 from channels.db import database_sync_to_async
 from asgiref.sync import async_to_sync
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 from .models import GameTable, UserAccount
+
+User = get_user_model()
 
 class GameConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
@@ -44,6 +46,24 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     async def add_table_request(self):
         await self.send_to_table_server()
 
+
+    async def augment_table_view_update(self, message):
+        assert message['type'] == 'table_view_update'
+        aug_message = message.copy()
+        player_names = {}
+        for p in aug_message['data']['shared_data']['players']:
+            p['player_name'] = await self.get_player_name(p['user_id'])
+            player_names[p['sit']] = p['player_name']
+
+        aug_message['data']['shared_data']['player_names'] = player_names
+
+
+        if 'winners' in aug_message['data']['shared_data']:
+            #add winner names, maybe like player_names: {sit: [name,id]} or something like that
+            pass
+
+        return aug_message
+
     async def recieve_table_message(self, message):
         """recieve updates and responses from the table server"""
         TABLE_MESSAGE_TYPES = ['table_view_update', 'balance_update']
@@ -51,7 +71,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             message = json.loads(message)
         
         if message['type'] == 'table_view_update':
-            await self.send_json(message)
+            aug_message = await self.augment_table_view_update(message)
+            await self.send_json(aug_message)
 
         if message['type'] == 'balance_update':
             # Inside a consumer
@@ -59,7 +80,11 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 "balance_update",
                 message,
             )
-    
+    @database_sync_to_async
+    def get_player_name(self, user_id: int) -> str:
+        return User.objects.get(id=user_id).get_username()
+
+
     async def send_to_table_server(self, consumer_request: dict):
         CONSUMER_MESSAGE_TYPES = ['sit_request', 'move_request', 'add_chips_request', 'init_table_request']
         if type(consumer_request) == dict:
@@ -85,6 +110,16 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         consumer_request['data'].update({'user_id': self.user.id, 'table_id': self.table_id})
         
         if consumer_request['type'] == 'sit_request':
+            if consumer_request['data']['type'] == 'join':
+                account = await self.get_db_user_account()
+                if account.balance < consumer_request['data']['chips']:
+                    await self.send_json({
+                        'type': 'sit_response',
+                        'success': False,
+                        'message': 'not enough chips in your account!'
+                    })
+                    return
+
             await self.send_to_table_server(consumer_request)
         
         if consumer_request['type'] == 'move_request':
@@ -97,3 +132,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def get_db_table_by_id(self, table_id: str) -> GameTable:
         return GameTable.objects.get(id=table_id)
+    
+    @database_sync_to_async
+    def get_db_user_account(self) -> UserAccount:
+        return UserAccount.objects.get(user=self.user)

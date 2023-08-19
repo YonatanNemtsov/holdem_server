@@ -16,6 +16,7 @@ body {
     display: flex;
     flex-direction: row;
     align-self: center;
+    min-height: 220px;
     flex: 1;
 }
 
@@ -29,7 +30,7 @@ body {
 
 #table-center {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     flex: 1;
     align-self: center;
 }
@@ -44,12 +45,19 @@ body {
 .last-move {
     color: red;
     font-size: large;
+    min-height: 20px;
 }
 
 #pots {
+    display: block;
     color: red;
-    font-size: large;
+    align-items: center;
+    height: 20px;
+}
 
+#pots p {
+    text-align: center;
+    font-size: 25px;
 }
 
 .has-folded {
@@ -62,9 +70,28 @@ header, footer {
     height: 50vh;
     flex: 1;
 }
+
+#winners {
+    color: silver;
+    font-size: 30px;
+    font-weight: bold;
+}
+
+footer {
+    display: flex;
+    flex-direction: row;
+    flex-shrink: 0;
+    /*position:sticky;*/
+    min-height: 10vh;
+    bottom: 0;
+    width: 100%;
+    height: 10%;
+    padding: 10px;
+}
 #community_cards {
     display: flex;
     flex-direction: row;
+    min-height: 80px;
 }
 .community-card {
     padding: 0.1%;
@@ -76,7 +103,16 @@ header, footer {
     
 }
 
+#raise input {
+    width: 100px;
+}
 #game-messages {
     padding-right: 20px;
+
     
 }
+
+#turn-indicator {
+    background-color: orange;
+}
+
