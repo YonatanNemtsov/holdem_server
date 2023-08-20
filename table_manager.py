@@ -102,7 +102,7 @@ class TableManager:
     def __init__(self, table_id: str, table_config: dict) -> None:
         self.table = HoldemTable(table_id ,HoldemTableConfig(**table_config))
         self.connections = dict() # websocket connections, keys are user_id's
-        self.timer = TurnTimer(self,7)
+        self.timer = TurnTimer(self,15)
         self.timer_task = None
         self.server_manager = None
         self.running = False
@@ -145,7 +145,7 @@ class TableManager:
                     await self.send_table_view_to_all()
                     self.table.round.distribute_pots()
                     #(p.sync_chips() for p in self.table.players)
-                    await asyncio.sleep(4)
+                    await asyncio.sleep(7.5)
                     await self.send_table_view_to_all()
                     self.table.round.start_next_move()
                     await self.send_table_view_to_all()

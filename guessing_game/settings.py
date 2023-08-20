@@ -28,7 +28,7 @@ with open('key.txt','r') as f:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['.localhost', '127.0.0.1','0.0.0.0','holdem.ynemtsov.com']
+ALLOWED_HOSTS = ['.localhost', '127.0.0.1','0.0.0.0','holdem.ynemtsov.com','192.168.125.187']
 CSRF_TRUSTED_ORIGINS = ['https://holdem.ynemtsov.com']
 
 

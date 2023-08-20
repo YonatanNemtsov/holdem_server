@@ -7,12 +7,35 @@ body {
     background-color:green;
 }
 
-
 header {
-    background: yellowgreen;
-    height: 20vh;
-    flex: 1;
-  }
+  background: yellowgreen;
+  height: 20vh;
+  flex: 1;
+}
+
+footer {
+  background: yellowgreen;
+  flex: 1;
+  display: flex;
+  bottom: 0;
+}
+
+h1 {
+  text-align: center;
+  color: gold;
+}
+
+#about {
+  font-size: 20px;
+  color: gold;
+  text-align: center;
+}
+
+h2 {
+  color: white;
+  font-style: italic;
+}
+
 
 #tables {
     display: flex;
@@ -21,13 +44,12 @@ header {
 
 .table-box {
     width: calc(33.33% - 2px); /* Adjust the width as needed */
-    background-color: #f0f0f0;
+    background-color: white;
     padding: 20px;
     border: 1px solid #ccc;
     text-align: center;
     box-sizing: border-box;
-}
-
-h1 {
-  text-align: center;
-}
+    color: black;
+    text-decoration: none;
+  }
+  

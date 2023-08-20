@@ -2,7 +2,9 @@ body {
     display: flex;
     flex-direction: column;
     margin: 0;
-    background-color:green;
+    background-color: green;
+    height: 100vh;
+    width: 100vw;
 }
 
 #game-table {
@@ -10,70 +12,76 @@ body {
     flex-wrap: wrap;
     display: flex;
     flex: 1;
+    justify-content: center;
 }
 
 .table-sits-top, .table-sits-bottom {
     display: flex;
     flex-direction: row;
     align-self: center;
-    min-height: 220px;
+    min-height: 20vh;
+    max-height: 20vh;
     flex: 1;
 }
 
-.table-sits-top > div {
-    width: 130px;
-}
-
+.table-sits-top > div,
 .table-sits-bottom > div {
-    width: 130px;
+    min-width: 15vw;
 }
 
 #table-center {
     display: flex;
     flex-direction: column;
     flex: 1;
-    align-self: center;
+    min-height: 7vh;
+    max-height: 20vh;
+    align-items: center;
+    justify-content: center;
 }
+
 .player-name {
     color: blue;
-    font-size: large;
+    font-size: 2vh;
 }
+
 .chips {
-    color: red;
-    font-size: large;
+    color: gold;
+    font-size: 2vh;
 }
+
 .last-move {
-    color: red;
-    font-size: large;
-    min-height: 20px;
+    color: gold;
+    font-size: 2vh;
+    min-height: 1vh;
+    max-height: 10vh;
 }
 
 #pots {
-    display: block;
-    color: red;
+    display: flex;
+    color: gold;
     align-items: center;
-    height: 20px;
+    min-height: 1vh;
 }
 
 #pots p {
     text-align: center;
-    font-size: 25px;
+    font-size:2vh; /* Adjust as needed */
 }
 
 .has-folded {
     color: red;
-    font-size: large;
+    font-size: larger;
 }
 
 header, footer {
     background: yellowgreen;
-    height: 50vh;
+    max-height: 10vh;
     flex: 1;
 }
 
 #winners {
-    color: silver;
-    font-size: 30px;
+    color: goldenrod;
+    font-size: 3vh; /* Adjust as needed */
     font-weight: bold;
 }
 
@@ -81,38 +89,143 @@ footer {
     display: flex;
     flex-direction: row;
     flex-shrink: 0;
-    /*position:sticky;*/
     min-height: 10vh;
     bottom: 0;
     width: 100%;
-    height: 10%;
-    padding: 10px;
+    padding: 1vh; /* Adjust as needed */
 }
+
 #community_cards {
     display: flex;
-    flex-direction: row;
-    min-height: 80px;
+    flex-direction: row; /* Display items horizontally */
+    min-height: 15vh;
+    align-items: center; /* Center vertically */
+    justify-content: center; /* Center horizontally */
 }
+
 .community-card {
-    padding: 0.1%;
+    height: 15vh; /* Adjust as needed */
+    max-height: 150px;
+    padding: 0.3%; /* Adjust as needed */
+     /* Adjust as needed */
 }
 
 .messages {
     display: flex;
     flex-direction: column;
-    
 }
 
-#raise input {
-    width: 100px;
-}
+
 #game-messages {
-    padding-right: 20px;
-
-    
+    padding-right: 2%; /* Adjust as needed */
 }
 
 #turn-indicator {
     background-color: orange;
 }
 
+.card1, .card2 {
+    min-width: 4vh;
+    max-width: 100px;
+}
+
+header {
+    font-size: 2vh;
+}
+
+#leave-table {
+    background-color:rebeccapurple;
+    color: white;
+    padding: 12px 20px; /* Increased padding */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 2vh; /* Increased font size */
+}
+
+
+
+
+
+
+
+
+/* Footer styles */
+footer {
+    background: yellowgreen;
+    color: #ecf0f1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    box-shadow: 0px -2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Button styles */
+#game-controls button {
+    background-color: #3498db;
+    color: white;
+    padding: 12px 20px; /* Increased padding */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 2vh; /* Increased font size */
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+/* Input and button for raising */
+#raise {
+    display: flex;
+    align-items: center;
+}
+
+#raise input[type="number"] {
+    width: 15vw;
+    padding: 8px;
+    margin-right: 10px;
+    border: 1px solid #bdc3c7;
+    border-radius: 5px;
+}
+
+#raise button[type="submit"] {
+    background-color: #e67e22;
+    color: white;
+    padding: 12px 20px; /* Increased padding */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 2vh; /* Increased font size */
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+/* Game stage message */
+#game-stage {
+    font-size: 3vh;
+}
+
+/* Additional styles for specific buttons */
+#fold {
+    background-color: #e74c3c;
+}
+
+#call {
+    background-color: #2ecc71;
+}
+
+#check {
+    background-color: #f39c12;
+}
+
+/* Game messages */
+#game-messages-2 {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding: 10%;
+    color: black;
+}
+
+/* You can add more styles and customize as needed */

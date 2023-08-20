@@ -11,8 +11,11 @@
 </head>
 <body>
     <header>
+        <span>
         Hi {{player}}!
         Your Balance: {{balance}}$
+        </span>
+
         <button type="button" value="leave-table" id="leave-table"> Sit up </button>
 
         <a href="/"> back to lobby</a>
@@ -26,15 +29,16 @@
         <div class="table-sits-top">
             <div id="player-1">
                 
-                <button class="sit"> sit 1</button>
+                <button class="sit">sit 1</button>
                 <div>
                     <span class="has-folded"></span>
                     <span class="player-name"> </span>
                     <span class="chips"></span> <br>
-                    <img class=card1 src="" alt="" width="60"> 
-                    <img class="card2" src="" alt="" width="60"/>
+                    <img class=card1 src="" alt=""> 
+                    <img class="card2" src="" alt=""/>
                 </div>
                 <p class="last-move"></p>
+                
                 
             </div>
             
@@ -44,8 +48,8 @@
                     <span class="has-folded"></span>
                     <span class="player-name"> </span>  
                     <span class="chips"></span> <br>
-                    <img class=card1 src="" alt="" width="60"> 
-                    <img class="card2" src="" alt="" width="60"/>
+                    <img class=card1 src="" alt=""> 
+                    <img class="card2" src="" alt="">
                 </div>
                 <p class="last-move"></p>
                 
@@ -57,8 +61,8 @@
                     <span class="has-folded"></span>
                     <span class="player-name"> </span>  
                     <span class="chips"></span> <br>
-                    <img class=card1 src="" alt="" width="60"> 
-                    <img class="card2" src="" alt="" width="60"/>
+                    <img class=card1 src="" alt=""> 
+                    <img class="card2" src="" alt=""/>
                 </div>
                 <p class="last-move"></p>
                 
@@ -70,8 +74,8 @@
                     <span class="has-folded"></span>
                     <span class="player-name"> </span>  
                     <span class="chips"></span> <br>
-                    <img class=card1 src="" alt="" width="60"> 
-                    <img class="card2" src="" alt="" width="60"/>
+                    <img class=card1 src="" alt=""> 
+                    <img class="card2" src="" alt=""/>
                 </div>
                 <p class="last-move"></p>
                 
@@ -98,8 +102,8 @@
                     <span class="has-folded"></span>
                     <span class="player-name"> </span>
                     <span class="chips"></span> <br>
-                    <img class=card1 src="" alt="" width="60"> 
-                    <img class="card2" src="" alt="" width="60"/>
+                    <img class=card1 src="" alt=""> 
+                    <img class="card2" src="" alt=""/>
                 </div>
             </div>
 
@@ -110,8 +114,8 @@
                     <span class="has-folded"></span>
                     <span class="player-name"> </span>
                     <span class="chips"></span> <br>
-                    <img class=card1 src="" alt="" width="60"> 
-                    <img class="card2" src="" alt="" width="60"/>
+                    <img class=card1 src="" alt=""> 
+                    <img class="card2" src="" alt=""/>
                 </div>
             </div>
 
@@ -123,8 +127,8 @@
                     <span class="has-folded"></span>
                     <span class="player-name"> </span>
                     <span class="chips"></span> <br>
-                    <img class=card1 src="" alt="" width="60"> 
-                    <img class="card2" src="" alt="" width="60"/>
+                    <img class=card1 src="" alt=""> 
+                    <img class="card2" src="" alt=""/>
                 </div>
             </div>
 
@@ -136,8 +140,8 @@
                     <span class="has-folded"></span>
                     <span class="player-name"> </span>
                     <span class="chips"></span> <br>
-                    <img class=card1 src="" alt="" width="60"> 
-                    <img class="card2" src="" alt="" width="60"/>
+                    <img class=card1 src="" alt=""> 
+                    <img class="card2" src="" alt=""/>
                 </div>
             </div>
 
@@ -149,8 +153,8 @@
                     <span class="has-folded"></span>
                     <span class="player-name"> </span>
                     <span class="chips"></span> <br>
-                    <img class=card1 src="" alt="" width="60"> 
-                    <img class="card2" src="" alt="" width="60"/>
+                    <img class=card1 src="" alt=""> 
+                    <img class="card2" src="" alt=""/>
                 </div>
             </div>
         </div>
@@ -273,8 +277,8 @@
                 data.data.shared_data.community_cards.forEach(card => {
                     let cardImage = document.createElement('img');
                     cardImage.src = '/static/cards/'+card+'.png';
-                    cardImage.width = 60;
-                    cardImage.height = 87;
+                    //cardImage.width = 60;
+                    //cardImage.height = 87;
                     cardImage.alt = card;
                     cardImage.setAttribute("class", "community-card");
                     document.getElementById('community_cards').appendChild(cardImage);
@@ -325,7 +329,8 @@
                 turnIndicator.innerText = Math.round(data.data.shared_data.timer);
 
                 const newParent = document.querySelector('#player-' + data.data.shared_data.to_move);
-                newParent.appendChild(turnIndicator);
+                const insertPositionElement = document.querySelector('#player-' + data.data.shared_data.to_move + ' .card2');
+                insertPositionElement.insertAdjacentElement('afterend', turnIndicator);
             }
             
             // updating pots

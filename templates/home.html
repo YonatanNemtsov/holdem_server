@@ -7,17 +7,18 @@
 {% endblock style %}
 
 {% block content %}
-<h1> Welcome! </h1>
+<h1> Welcome to Learning Hold'em! </h1>
+<p id="about"> This site is dedicated to practicing Texas Hold'em with play chips </p>
 {% if user.is_authenticated %}
-<h2> Choose a table </h2>
+<h2> Choose a table to play </h2>
 <br>
 <div id="tables">
     {% for table in tables %}
-
+    
     <a href="/game/{{table.id}}/" class="table-box">
         
         {{table.name}} <br>
-
+        
         blinds: {{table.small_blind}} / {{table.big_blind}}
     </a><br>
     {% endfor %}
@@ -27,5 +28,7 @@
 
 {% endif %}
 
-
+<footer> 
+    <a href=""> Poker Excersices: Comming Soon</a>
+</footer>
 {% endblock content %}
